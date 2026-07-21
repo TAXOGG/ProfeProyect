@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  /* ARCE es una herramienta de captura de datos, diseñada solo en modo claro.
+     Sin esto, el navegador aplica un tema oscuro nativo a <select>, inputs de fecha, etc.
+     cuando el sistema operativo del usuario está en modo oscuro, volviéndolos casi ilegibles
+     aunque el resto de la página siga en claro. */
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #52525b; /* zinc-600 — el gris por defecto del navegador queda muy claro para leer */
+  opacity: 1;
+}
+
+/* Los <select> no tienen ::placeholder real; la opción deshabilitada hace ese papel.
+   Oscurecemos el texto del select mientras esa opción esté seleccionada. */
+select {
+  color: #18181b; /* zinc-900, una vez elegido un valor real */
+}
+select:has(option[value=""]:checked) {
+  color: #52525b; /* zinc-600, mientras se ve el placeholder */
+}
+
+@media print {
+  aside {
+    display: none !important;
+  }
+  main {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  @page {
+    size: landscape;
+    margin: 12mm;
+  }
+}
