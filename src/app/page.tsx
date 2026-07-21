@@ -99,36 +99,49 @@ function IconCamera({ className }: { className?: string }) {
   );
 }
 
+function IconPuzzle({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path
+        d="M9 4.5h3.5a1.3 1.3 0 0 1 1.3 1.7c-.2.6.2 1.3.9 1.3H17a2 2 0 0 1 2 2v2.3c0 .7-.7 1.1-1.3.9a1.3 1.3 0 0 0-1.7 1.3V17a2 2 0 0 1-2 2h-2.3c-.7 0-1.1-.7-.9-1.3a1.3 1.3 0 0 0-1.3-1.7H8a2 2 0 0 1-2-2v-2.3c0-.7.7-1.1 1.3-.9.8.3 1.7-.3 1.7-1.3V8a2 2 0 0 1 2-2Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 const PAINS: Pain[] = [
   {
     icon: IconClock,
-    dolor: "Se te va la tarde del domingo copiando fórmulas entre hojas de Excel, con miedo de romper algo.",
-    solucion: "La nota final por periodo y anual se calcula sola, con los 5 rubros ya configurados. Sin fórmulas que romper.",
+    solucion: "La nota final se calcula sola, con los 5 rubros ya configurados.",
+    dolor: "Antes: copiar fórmulas entre hojas de Excel un domingo en la noche, con miedo de romper algo.",
   },
   {
     icon: IconCloud,
-    dolor: "Si se daña la computadora o el internet del cole falla justo cuando más lo necesitás, el trabajo se pierde.",
-    solucion: "Todo respaldado en la nube. Cotidiano, Pruebas, Tareas, Proyecto y Asistencia funcionan aunque se corte la conexión.",
+    solucion: "Seguís registrando aunque se corte el internet — se sube solo al volver la señal.",
+    dolor: "Antes: perder el trabajo del día porque falló la conexión del cole.",
   },
   {
     icon: IconMail,
-    dolor: "Cuando un encargado pregunta cómo va su hijo, armás un resumen a mano o mandás capturas de pantalla.",
-    solucion: "Un clic y se envía un certificado o reporte por rubro, en PDF, directo al correo del encargado.",
+    solucion: "Con un clic, el resultado de cualquier módulo llega en PDF al correo del encargado.",
+    dolor: "Antes: armar el resumen a mano o mandar capturas de pantalla del Excel.",
   },
   {
     icon: IconAlert,
-    dolor: "Te enterás de que un estudiante está en riesgo por ausencias justo cuando ya es tarde para la convocatoria.",
-    solucion: "Código de color automático (o la tabla oficial del MEP) que resalta a tiempo a quién hay que darle seguimiento.",
+    solucion: "Aviso automático de quién necesita atención en asistencia — con la tabla oficial del MEP si querés.",
+    dolor: "Antes: enterarte cuando ya no había tiempo para la convocatoria.",
   },
   {
     icon: IconLifeBuoy,
-    dolor: "Cuando algo falla en el Excel, no hay a quién llamar — a lo mucho, un video de YouTube de hace 6 años.",
-    solucion: "Soporte real: un botón dentro de la plataforma para pedir ayuda o reportar algo, y alguien del otro lado.",
+    solucion: "Soporte real, dentro de la plataforma, con alguien del otro lado.",
+    dolor: "Antes: un video de YouTube de hace 6 años, si tenías suerte.",
   },
   {
     icon: IconCamera,
-    dolor: "Las fotos de evidencia de trabajos o incidentes se pierden entre chats de WhatsApp y el rollo del celular.",
-    solucion: "Respaldo de fotos por estudiante, ordenado y privado — donde tiene que estar, no donde quepa.",
+    solucion: "Respaldo de fotos por estudiante, ordenado y privado.",
+    dolor: "Antes: perdidas entre chats de WhatsApp y el rollo del celular.",
   },
 ];
 
@@ -275,16 +288,19 @@ export default async function HomePage() {
                 style={{ borderColor: "#e8ddc8" }}
               >
                 <div
-                  className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "#fdece2", color: EMBER }}
+                  className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: "#e6f2f0", color: TEAL }}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5.5 w-5.5" />
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: INK_MUTED }}>
-                  {p.dolor}
-                </p>
-                <p className="mt-3 text-sm font-semibold leading-relaxed" style={{ color: TEAL }}>
+                <p
+                  className="font-[family-name:var(--font-display)] text-lg font-semibold leading-snug"
+                  style={{ color: INK }}
+                >
                   {p.solucion}
+                </p>
+                <p className="mt-2.5 text-xs leading-relaxed" style={{ color: INK_MUTED }}>
+                  {p.dolor}
                 </p>
               </div>
             );
@@ -294,41 +310,78 @@ export default async function HomePage() {
 
       {/* COMO FUNCIONA */}
       <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: "#f3ead9" }}>
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-2xl">
           <h2 className="text-center font-[family-name:var(--font-display)] text-3xl font-semibold">
-            Cómo funciona
+            Así de simple
           </h2>
-          <div className="mt-10 grid gap-8 sm:grid-cols-3">
+          <ol
+            className="relative mt-12 space-y-10 border-l-2 pl-8"
+            style={{ borderColor: "rgba(15,118,110,0.3)" }}
+          >
             {[
               {
-                paso: "1",
-                titulo: "Configurá tu sección",
-                texto: "Rubros, periodos y estudiantes, en minutos — clonás la estructura de una sección existente si ya tenés una.",
+                titulo: "Pedís acceso",
+                texto: "Nos contás de tu institución y te habilitamos la cuenta — sin registro abierto, para que el soporte siga siendo cercano.",
               },
               {
-                paso: "2",
-                titulo: "Registrá en cada módulo",
-                texto: "Cotidiano, Pruebas, Tareas, Proyecto y Asistencia, con aviso automático si un puntaje se ve fuera de lo esperado.",
+                titulo: "Configurás tu sección",
+                texto: "Rubros, periodos y estudiantes, en minutos. Si ya tenés una sección armada, clonás su estructura para la siguiente.",
               },
               {
-                paso: "3",
-                titulo: "Compartí con un clic",
-                texto: "Actas, certificados y reportes por rubro, listos para imprimir o enviar por correo al encargado.",
+                titulo: "Registrás en cada módulo, sin dedazos",
+                texto: "Cotidiano, Pruebas, Tareas, Proyecto y Asistencia. Si un puntaje se sale de lo esperado, el sistema pregunta antes de guardarlo.",
               },
-            ].map((s) => (
-              <div key={s.paso}>
+              {
+                titulo: "Seguís trabajando sin internet",
+                texto: "Se corta la conexión del cole y no pasa nada: registrás igual, y se sube solo apenas vuelva la señal.",
+              },
+              {
+                titulo: "Compartís con un clic",
+                texto: "El resultado de cualquier módulo llega en PDF, directo al correo del encargado.",
+              },
+            ].map((s, i) => (
+              <li key={s.titulo} className="relative">
                 <span
-                  className="font-[family-name:var(--font-display)] text-4xl font-black"
-                  style={{ color: TEAL, opacity: 0.35 }}
+                  className="absolute top-0 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white"
+                  style={{ left: "-2.6rem", backgroundColor: TEAL }}
                 >
-                  {s.paso}
+                  {i + 1}
                 </span>
-                <h3 className="mt-2 text-base font-semibold">{s.titulo}</h3>
-                <p className="mt-2 text-sm leading-relaxed" style={{ color: INK_MUTED }}>
+                <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">
+                  {s.titulo}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed" style={{ color: INK_MUTED }}>
                   {s.texto}
                 </p>
-              </div>
+              </li>
             ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* EN DESARROLLO */}
+      <section className="px-5 py-16 sm:px-8">
+        <div className="mx-auto max-w-3xl">
+          <div
+            className="rounded-xl border-2 border-dashed p-8 text-center"
+            style={{ borderColor: "#d8cdb8" }}
+          >
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+              style={{ backgroundColor: "#fdece2", color: EMBER }}
+            >
+              <IconPuzzle className="h-3.5 w-3.5" />
+              En desarrollo
+            </span>
+            <h2 className="mt-4 font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl">
+              Y esto apenas empieza
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed" style={{ color: INK_MUTED }}>
+              Estamos construyendo una <strong style={{ color: INK }}>extensión de Chrome</strong>{" "}
+              que sube automáticamente tus datos al <strong style={{ color: INK }}>SEA</strong>{" "}
+              (Sistema de Evaluación Ágil del MEP) — la misma información que ya llevás en ARCE,
+              sin volver a digitarla. Menos horas de reproceso, un solo lugar donde registrar.
+            </p>
           </div>
         </div>
       </section>
