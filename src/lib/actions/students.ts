@@ -3,6 +3,7 @@
 import ExcelJS from "exceljs";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { insertWithAutoIncrementRetry } from "@/lib/insert-with-retry";
 
 const IMPORT_HEADER_MAP: Record<string, string> = {
   "primer apellido": "primer_apellido",
@@ -187,31 +188,50 @@ export async function importStudentsFromGrid(
   return { success: true, imported: toInsert.length, skipped };
 }
 
+async function maxStudentNumero(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  sectionId: string,
+) {
+  const { data } = await supabase
+    .from("students")
+    .select("numero")
+    .eq("section_id", sectionId)
+    .order("numero", { ascending: false })
+    .limit(1)
+    .single();
+  return data?.numero ?? 0;
+}
+
 export async function createStudent(sectionId: string, formData: FormData) {
   const supabase = await createClient();
-
-  const { count } = await supabase
-    .from("students")
-    .select("id", { count: "exact", head: true })
-    .eq("section_id", sectionId);
 
   const primerApellido = String(formData.get("primer_apellido") ?? "").trim();
   const segundoApellido = String(formData.get("segundo_apellido") ?? "").trim();
   const nombre = String(formData.get("nombre") ?? "").trim();
   if (!primerApellido || !nombre) return;
 
-  const { error } = await supabase.from("students").insert({
-    section_id: sectionId,
-    numero: (count ?? 0) + 1,
-    primer_apellido: primerApellido,
-    segundo_apellido: segundoApellido || null,
-    nombre,
-    identificacion: String(formData.get("identificacion") ?? "").trim() || null,
-    sexo: String(formData.get("sexo") ?? "").trim() || null,
-    tipo_apoyo: String(formData.get("tipo_apoyo") ?? "No tiene").trim(),
-  });
+  const { count } = await supabase
+    .from("students")
+    .select("id", { count: "exact", head: true })
+    .eq("section_id", sectionId);
 
-  if (error) throw new Error(error.message);
+  const { error } = await insertWithAutoIncrementRetry(
+    (count ?? 0) + 1,
+    (numero) =>
+      supabase.from("students").insert({
+        section_id: sectionId,
+        numero,
+        primer_apellido: primerApellido,
+        segundo_apellido: segundoApellido || null,
+        nombre,
+        identificacion: String(formData.get("identificacion") ?? "").trim() || null,
+        sexo: String(formData.get("sexo") ?? "").trim() || null,
+        tipo_apoyo: String(formData.get("tipo_apoyo") ?? "No tiene").trim(),
+      }),
+    () => maxStudentNumero(supabase, sectionId),
+  );
+
+  if (error) throw new Error(error);
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
 }
 

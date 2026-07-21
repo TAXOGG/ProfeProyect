@@ -30,6 +30,14 @@ export function SolicitudAccesoForm() {
 
   return (
     <form action={submit} className="flex flex-col gap-4">
+      <input
+        type="text"
+        name="sitio_web"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute left-[-9999px] h-0 w-0 opacity-0"
+      />
       <div>
         <label className="block text-sm font-medium text-zinc-700">Nombre completo</label>
         <input

@@ -2,30 +2,50 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { insertWithAutoIncrementRetry } from "@/lib/insert-with-retry";
+
+async function maxIndicadorNumero(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  periodId: string,
+) {
+  const { data } = await supabase
+    .from("cotidiano_indicators")
+    .select("numero")
+    .eq("period_id", periodId)
+    .order("numero", { ascending: false })
+    .limit(1)
+    .single();
+  return data?.numero ?? 0;
+}
 
 export async function createIndicador(sectionId: string, periodId: string, formData: FormData) {
   const supabase = await createClient();
-
-  const { count } = await supabase
-    .from("cotidiano_indicators")
-    .select("id", { count: "exact", head: true })
-    .eq("period_id", periodId);
 
   const descripcion = String(formData.get("descripcion") ?? "").trim();
   const fechaAplicacion = String(formData.get("fecha_aplicacion") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 3);
   if (!descripcion) return;
 
-  const { error } = await supabase.from("cotidiano_indicators").insert({
-    section_id: sectionId,
-    period_id: periodId,
-    numero: (count ?? 0) + 1,
-    descripcion,
-    fecha_aplicacion: fechaAplicacion || null,
-    puntos_max: puntosMax,
-  });
+  const { count } = await supabase
+    .from("cotidiano_indicators")
+    .select("id", { count: "exact", head: true })
+    .eq("period_id", periodId);
 
-  if (error) throw new Error(error.message);
+  const { error } = await insertWithAutoIncrementRetry(
+    (count ?? 0) + 1,
+    (numero) =>
+      supabase.from("cotidiano_indicators").insert({
+        section_id: sectionId,
+        period_id: periodId,
+        numero,
+        descripcion,
+        fecha_aplicacion: fechaAplicacion || null,
+        puntos_max: puntosMax,
+      }),
+    () => maxIndicadorNumero(supabase, periodId),
+  );
+
+  if (error) throw new Error(error);
   revalidatePath(`/secciones/${sectionId}/cotidiano`);
 }
 

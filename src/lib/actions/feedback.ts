@@ -27,6 +27,13 @@ export async function submitFeedback(input: {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Debes iniciar sesión." };
 
+  const { data: recientes } = await supabase.rpc("count_recent_feedback", {
+    p_user_id: user.id,
+  });
+  if ((recientes ?? 0) >= 10) {
+    return { error: "Enviaste varios mensajes seguidos. Espera un rato antes de enviar otro." };
+  }
+
   const { error } = await supabase.from("feedback").insert({
     user_id: user.id,
     categoria: input.categoria,

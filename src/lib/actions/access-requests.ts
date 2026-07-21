@@ -38,6 +38,12 @@ function accessRequestEmailHtml(input: {
 export async function createAccessRequest(formData: FormData) {
   const supabase = await createClient();
 
+  // Honeypot: campo oculto que un usuario real nunca llena. Si viene con
+  // contenido, es casi seguro un bot — se descarta en silencio (sin avisarle
+  // al bot que falló, ni guardar nada).
+  const honeypot = String(formData.get("sitio_web") ?? "").trim();
+  if (honeypot) return;
+
   const nombre = String(formData.get("nombre") ?? "").trim();
   const correo = String(formData.get("correo") ?? "").trim();
   const institucion = String(formData.get("institucion") ?? "").trim();
@@ -46,6 +52,13 @@ export async function createAccessRequest(formData: FormData) {
 
   if (!nombre || !correo || !institucion) {
     throw new Error("Nombre, correo e institución son obligatorios.");
+  }
+
+  const { data: recientes } = await supabase.rpc("count_recent_access_requests", {
+    p_correo: correo,
+  });
+  if ((recientes ?? 0) >= 3) {
+    throw new Error("Ya enviaste varias solicitudes recientemente. Intenta de nuevo más tarde.");
   }
 
   const { error } = await supabase.from("access_requests").insert({

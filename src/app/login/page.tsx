@@ -42,7 +42,14 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">
         <div className="flex items-center gap-3">
-          <Image src="/logo-arce.png" alt="" width={40} height={40} className="shrink-0" />
+          <Image
+            src="/logo-arce.png"
+            alt=""
+            width={40}
+            height={40}
+            unoptimized
+            className="shrink-0"
+          />
           <div>
             <h1 className="text-xl font-semibold text-zinc-900">ARCE</h1>
             <p className="text-[11px] leading-tight text-zinc-500">

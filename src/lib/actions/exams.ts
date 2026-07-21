@@ -2,30 +2,50 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { insertWithAutoIncrementRetry } from "@/lib/insert-with-retry";
+
+async function maxExamNumero(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  periodId: string,
+) {
+  const { data } = await supabase
+    .from("exams")
+    .select("numero")
+    .eq("period_id", periodId)
+    .order("numero", { ascending: false })
+    .limit(1)
+    .single();
+  return data?.numero ?? 0;
+}
 
 export async function createExam(sectionId: string, periodId: string, formData: FormData) {
   const supabase = await createClient();
-
-  const { count } = await supabase
-    .from("exams")
-    .select("id", { count: "exact", head: true })
-    .eq("period_id", periodId);
 
   const nombre = String(formData.get("nombre") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 0);
   const peso = Number(formData.get("peso_pct") ?? 0) / 100;
   if (!nombre || puntosMax <= 0) return;
 
-  const { error } = await supabase.from("exams").insert({
-    section_id: sectionId,
-    period_id: periodId,
-    numero: (count ?? 0) + 1,
-    nombre,
-    puntos_max: puntosMax,
-    porcentaje_relativo: peso,
-  });
+  const { count } = await supabase
+    .from("exams")
+    .select("id", { count: "exact", head: true })
+    .eq("period_id", periodId);
 
-  if (error) throw new Error(error.message);
+  const { error } = await insertWithAutoIncrementRetry(
+    (count ?? 0) + 1,
+    (numero) =>
+      supabase.from("exams").insert({
+        section_id: sectionId,
+        period_id: periodId,
+        numero,
+        nombre,
+        puntos_max: puntosMax,
+        porcentaje_relativo: peso,
+      }),
+    () => maxExamNumero(supabase, periodId),
+  );
+
+  if (error) throw new Error(error);
   revalidatePath(`/secciones/${sectionId}/pruebas`);
 }
 

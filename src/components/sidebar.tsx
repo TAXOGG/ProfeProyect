@@ -76,7 +76,14 @@ export function Sidebar({
           prefetch={false}
           className="flex items-center gap-2.5 border-b border-zinc-200 px-5 py-4 hover:bg-zinc-50"
         >
-          <Image src="/logo-arce.png" alt="" width={28} height={28} className="shrink-0" />
+          <Image
+            src="/logo-arce.png"
+            alt=""
+            width={28}
+            height={28}
+            unoptimized
+            className="shrink-0"
+          />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-zinc-900">ARCE</p>
             {teacherName && (

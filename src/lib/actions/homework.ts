@@ -2,28 +2,48 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { insertWithAutoIncrementRetry } from "@/lib/insert-with-retry";
+
+async function maxHomeworkNumero(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  periodId: string,
+) {
+  const { data } = await supabase
+    .from("homework_items")
+    .select("numero")
+    .eq("period_id", periodId)
+    .order("numero", { ascending: false })
+    .limit(1)
+    .single();
+  return data?.numero ?? 0;
+}
 
 export async function createHomeworkItem(sectionId: string, periodId: string, formData: FormData) {
   const supabase = await createClient();
+
+  const descripcion = String(formData.get("descripcion") ?? "").trim();
+  const fecha = String(formData.get("fecha") ?? "").trim();
+  if (!descripcion) return;
 
   const { count } = await supabase
     .from("homework_items")
     .select("id", { count: "exact", head: true })
     .eq("period_id", periodId);
 
-  const descripcion = String(formData.get("descripcion") ?? "").trim();
-  const fecha = String(formData.get("fecha") ?? "").trim();
-  if (!descripcion) return;
+  const { error } = await insertWithAutoIncrementRetry(
+    (count ?? 0) + 1,
+    (numero) =>
+      supabase.from("homework_items").insert({
+        section_id: sectionId,
+        period_id: periodId,
+        numero,
+        descripcion,
+        fecha: fecha || null,
+      }),
+    () => maxHomeworkNumero(supabase, periodId),
+  );
 
-  const { error } = await supabase.from("homework_items").insert({
-    section_id: sectionId,
-    period_id: periodId,
-    numero: (count ?? 0) + 1,
-    descripcion,
-    fecha: fecha || null,
-  });
-
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(error);
   revalidatePath(`/secciones/${sectionId}/tareas`);
 }
 
