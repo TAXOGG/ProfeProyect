@@ -13,6 +13,7 @@ import type {
   RubricConfig,
   Student,
 } from "@/lib/types";
+import { calcularNotaAsistencia } from "@/lib/attendance-grade";
 
 export type PeriodGrades = {
   cotidiano: number;
@@ -120,9 +121,8 @@ export function computeSectionGrades(input: {
         if (!record || record.justificada) return sum;
         return sum + record.ausencias;
       }, 0);
-      const pctAsistencia =
-        totalLecciones > 0 ? Math.max(0, 1 - ausenciasEfectivas / totalLecciones) : 1;
-      const asistencia = pctAsistencia * 100;
+      const ausenciasPct = totalLecciones > 0 ? (ausenciasEfectivas / totalLecciones) * 100 : 0;
+      const asistencia = calcularNotaAsistencia(ausenciasPct, rubric.asistencia_metodo);
 
       const notaFinal =
         cotidiano * rubric.cotidiano_pct +

@@ -29,6 +29,7 @@ export type RubricConfig = {
   asistencia_nota: string | null;
   asistencia_advertencia_pct: number | null;
   asistencia_limite_pct: number | null;
+  asistencia_metodo: "lineal" | "mep";
 };
 
 export type SectionWithInstitution = Section & { institutionNombre: string };

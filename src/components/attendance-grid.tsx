@@ -8,6 +8,7 @@ import { db } from "@/lib/offline/db";
 import { enqueueAction, pullAsistenciaData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
 import { SendRubroReportButton } from "@/components/send-rubro-report-button";
+import { calcularNotaAsistencia, type AsistenciaMetodo } from "@/lib/attendance-grade";
 import type { AttendanceRecord, AttendanceSession, Student } from "@/lib/types";
 
 type Pending = { sessionId: string; studentId: string; raw: string; lecciones: number };
@@ -49,6 +50,7 @@ export function AttendanceGrid({
   asistenciaPct,
   advertenciaPct,
   limitePct,
+  asistenciaMetodo = "lineal",
 }: {
   sectionId: string;
   students: Student[];
@@ -57,6 +59,7 @@ export function AttendanceGrid({
   asistenciaPct: number;
   advertenciaPct?: number | null;
   limitePct?: number | null;
+  asistenciaMetodo?: AsistenciaMetodo;
 }) {
   const [isPending, startTransition] = useTransition();
   const [values, setValues] = useState<Record<string, string>>(() => {
@@ -300,13 +303,10 @@ export function AttendanceGrid({
                 const parsed = parseAttendanceInput(raw);
                 return sum + (parsed.justificada ? 0 : parsed.ausencias);
               }, 0);
-              const pct =
-                totalLecciones > 0
-                  ? Math.max(0, 1 - ausenciasEfectivas / totalLecciones)
-                  : 1;
-              const nota = pct * 100;
+              const ausenciasPct =
+                totalLecciones > 0 ? (ausenciasEfectivas / totalLecciones) * 100 : 0;
+              const nota = calcularNotaAsistencia(ausenciasPct, asistenciaMetodo);
               const aporte = nota * asistenciaPct;
-              const ausenciasPct = 100 - nota;
               const alertStatus: "rojo" | "amarillo" | "normal" =
                 limitePct != null && ausenciasPct >= limitePct * 100
                   ? "rojo"

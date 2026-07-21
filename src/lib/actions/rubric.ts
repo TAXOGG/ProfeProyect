@@ -14,6 +14,8 @@ export async function updateRubric(sectionId: string, formData: FormData) {
   const tolerancia = Number(formData.get("tolerancia_pct")) / 100;
   const notaMinima = Number(formData.get("nota_minima"));
   const asistenciaNota = String(formData.get("asistencia_nota") ?? "").trim();
+  const asistenciaMetodoRaw = String(formData.get("asistencia_metodo") ?? "lineal");
+  const asistenciaMetodo = asistenciaMetodoRaw === "mep" ? "mep" : "lineal";
 
   const advertenciaRaw = String(formData.get("asistencia_advertencia_pct") ?? "").trim();
   const limiteRaw = String(formData.get("asistencia_limite_pct") ?? "").trim();
@@ -54,6 +56,7 @@ export async function updateRubric(sectionId: string, formData: FormData) {
       asistencia_nota: asistenciaNota || null,
       asistencia_advertencia_pct: asistenciaAdvertencia,
       asistencia_limite_pct: asistenciaLimite,
+      asistencia_metodo: asistenciaMetodo,
     })
     .eq("section_id", sectionId);
   if (rubricError) throw new Error(rubricError.message);

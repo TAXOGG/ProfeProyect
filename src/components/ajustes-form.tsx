@@ -81,6 +81,21 @@ export function AjustesForm({
 
         <div className="mt-4 border-t border-zinc-100 pt-4">
           <label className="flex items-center text-xs font-medium text-zinc-600">
+            Método de cálculo de la nota de Asistencia
+            <HelpTooltip text="Lineal: la nota baja en proporción directa a las ausencias. Tabla oficial MEP: usa los tramos del Art. 37° del Reglamento de Evaluación (0-10% de ausencias = nota máxima, 10-20% = un escalón menos, y así sucesivamente hasta 0 con 50% o más), en vez de una reducción continua." />
+          </label>
+          <select
+            name="asistencia_metodo"
+            defaultValue={rubric.asistencia_metodo ?? "lineal"}
+            className="mt-1 w-full max-w-xs rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="lineal">Lineal (actual)</option>
+            <option value="mep">Tabla oficial MEP (Art. 37°)</option>
+          </select>
+        </div>
+
+        <div className="mt-4 border-t border-zinc-100 pt-4">
+          <label className="flex items-center text-xs font-medium text-zinc-600">
             Umbrales de ausencias en la grilla de Asistencia
             <HelpTooltip text="Colorean automáticamente a cada estudiante en la pantalla de Asistencia según su % de ausencias acumuladas: blanco si va bien, amarillo si se acerca al límite, rojo si ya lo superó. Déjalos vacíos para desactivar el código de color." />
           </label>

@@ -63,6 +63,11 @@ export default async function AsistenciaPage({
       <div className={`rounded-lg border px-4 py-3 sm:px-5 sm:py-4 ${color.headerBg} ${color.headerBorder}`}>
         <h2 className="text-lg font-semibold text-zinc-900">Asistencia</h2>
         <p className="text-sm text-zinc-600">Registra las ausencias por fecha de clase.</p>
+        {rubricConfig?.asistencia_metodo === "mep" && (
+          <p className="mt-1 text-xs font-medium text-teal-700">
+            Calculando con la tabla oficial del MEP (Art. 37° del Reglamento de Evaluación).
+          </p>
+        )}
       </div>
 
       {limitePct != null && (
@@ -111,6 +116,7 @@ export default async function AsistenciaPage({
         asistenciaPct={rubricConfig?.asistencia_pct ?? 0}
         advertenciaPct={advertenciaPct}
         limitePct={limitePct}
+        asistenciaMetodo={rubricConfig?.asistencia_metodo ?? "lineal"}
       />
     </div>
   );
