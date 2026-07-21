@@ -7,6 +7,7 @@ import { ConfirmModal } from "@/components/confirm-modal";
 import { db } from "@/lib/offline/db";
 import { enqueueAction, pullCotidianoData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
+import { SendRubroReportButton } from "@/components/send-rubro-report-button";
 import type { CotidianoIndicator, CotidianoScore, Student } from "@/lib/types";
 
 export function CotidianoGrid({
@@ -120,6 +121,7 @@ export function CotidianoGrid({
             ))}
             <th className="px-3 py-2 text-center">Nota</th>
             <th className="px-3 py-2 text-center">% aporte</th>
+            <th className="no-print px-3 py-2 text-center">Reporte</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
@@ -162,12 +164,20 @@ export function CotidianoGrid({
                 })}
                 <td className="px-3 py-1.5 text-center text-zinc-700">{nota.toFixed(1)}</td>
                 <td className="px-3 py-1.5 text-center text-zinc-700">{aporte.toFixed(1)}</td>
+                <td className="no-print px-3 py-1.5 text-center">
+                  <SendRubroReportButton
+                    sectionId={sectionId}
+                    studentId={s.id}
+                    modulo="cotidiano"
+                    hasEmail={!!s.contacto_correo}
+                  />
+                </td>
               </tr>
             );
           })}
           {students.length === 0 && (
             <tr>
-              <td colSpan={indicators.length + 3} className="px-4 py-6 text-center text-zinc-400">
+              <td colSpan={indicators.length + 4} className="px-4 py-6 text-center text-zinc-400">
                 No hay estudiantes activos en esta sección.
               </td>
             </tr>

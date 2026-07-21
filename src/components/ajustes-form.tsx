@@ -79,6 +79,20 @@ export function AjustesForm({
           </p>
         </div>
 
+        <div className="mt-4 border-t border-zinc-100 pt-4">
+          <label className="flex items-center text-xs font-medium text-zinc-600">
+            Política de asistencia (para el correo a padres)
+            <HelpTooltip text="Este texto se incluye tal cual cuando envías por correo el reporte de Asistencia de un estudiante — por ejemplo el porcentaje de ausencias que le impide presentarse a convocatoria. Déjalo vacío si no aplica." />
+          </label>
+          <textarea
+            name="asistencia_nota"
+            rows={3}
+            defaultValue={rubric.asistencia_nota ?? ""}
+            placeholder="Ej: Si el estudiante acumula más de 20% de ausencias, no podrá presentarse a convocatoria."
+            className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400"
+          />
+        </div>
+
         {rubricError && <p className="mt-3 text-sm text-red-600">{rubricError}</p>}
         {saved === "rubric" && <p className="mt-3 text-sm text-emerald-600">Guardado.</p>}
 

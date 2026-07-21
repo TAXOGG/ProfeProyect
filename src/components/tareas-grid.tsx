@@ -5,6 +5,7 @@ import { upsertHomeworkScore } from "@/lib/actions/homework";
 import { db } from "@/lib/offline/db";
 import { enqueueAction, pullTareasData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
+import { SendRubroReportButton } from "@/components/send-rubro-report-button";
 import type { HomeworkItem, HomeworkScore, Student } from "@/lib/types";
 
 export function TareasGrid({
@@ -131,6 +132,7 @@ export function TareasGrid({
             ))}
             <th className="px-3 py-2 text-center">Nota Tareas</th>
             <th className="px-3 py-2 text-center">% aporte</th>
+            <th className="no-print px-3 py-2 text-center">Reporte</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-100">
@@ -166,12 +168,20 @@ export function TareasGrid({
                   {notaTareas.toFixed(1)}
                 </td>
                 <td className="px-3 py-1.5 text-center text-zinc-700">{aporte.toFixed(1)}</td>
+                <td className="no-print px-3 py-1.5 text-center">
+                  <SendRubroReportButton
+                    sectionId={sectionId}
+                    studentId={s.id}
+                    modulo="tareas"
+                    hasEmail={!!s.contacto_correo}
+                  />
+                </td>
               </tr>
             );
           })}
           {students.length === 0 && (
             <tr>
-              <td colSpan={items.length + 3} className="px-4 py-6 text-center text-zinc-400">
+              <td colSpan={items.length + 4} className="px-4 py-6 text-center text-zinc-400">
                 No hay estudiantes activos en esta sección.
               </td>
             </tr>

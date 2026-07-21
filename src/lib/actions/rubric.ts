@@ -13,6 +13,7 @@ export async function updateRubric(sectionId: string, formData: FormData) {
   const pruebas = Number(formData.get("pruebas_pct")) / 100;
   const tolerancia = Number(formData.get("tolerancia_pct")) / 100;
   const notaMinima = Number(formData.get("nota_minima"));
+  const asistenciaNota = String(formData.get("asistencia_nota") ?? "").trim();
 
   const total = cotidiano + tareas + asistencia + proyecto + pruebas;
   if (Math.abs(total - 1) > 0.001) {
@@ -31,6 +32,7 @@ export async function updateRubric(sectionId: string, formData: FormData) {
       proyecto_pct: proyecto,
       pruebas_pct: pruebas,
       tolerancia_pct: tolerancia,
+      asistencia_nota: asistenciaNota || null,
     })
     .eq("section_id", sectionId);
   if (rubricError) throw new Error(rubricError.message);

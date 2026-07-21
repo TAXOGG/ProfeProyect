@@ -46,6 +46,17 @@ export async function fetchSectionGradesData(
   periods: Period[];
   students: Student[];
   grades: StudentGrades[];
+  rubric: RubricConfig;
+  cotidianoIndicators: CotidianoIndicator[];
+  cotidianoScores: CotidianoScore[];
+  exams: Exam[];
+  examScores: ExamScore[];
+  homeworkItems: HomeworkItem[];
+  homeworkScores: HomeworkScore[];
+  projectStages: ProjectStage[];
+  projectScores: ProjectScore[];
+  attendanceSessions: AttendanceSession[];
+  attendanceRecords: AttendanceRecord[];
 } | null> {
   const supabase = await createClient();
 
@@ -128,5 +139,21 @@ export async function fetchSectionGradesData(
     attendanceRecords,
   });
 
-  return { section: section as Section, periods: periodList, students: studentList, grades };
+  return {
+    section: section as Section,
+    periods: periodList,
+    students: studentList,
+    grades,
+    rubric: rubric as RubricConfig,
+    cotidianoIndicators,
+    cotidianoScores,
+    exams,
+    examScores,
+    homeworkItems,
+    homeworkScores,
+    projectStages,
+    projectScores,
+    attendanceSessions,
+    attendanceRecords,
+  };
 }

@@ -26,6 +26,7 @@ export type RubricConfig = {
   proyecto_pct: number;
   pruebas_pct: number;
   tolerancia_pct: number;
+  asistencia_nota: string | null;
 };
 
 export type SectionWithInstitution = Section & { institutionNombre: string };
