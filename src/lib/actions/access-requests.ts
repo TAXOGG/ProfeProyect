@@ -1,6 +1,33 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email";
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "jorgeriv20770@gmail.com";
+
+function accessRequestEmailHtml(input: {
+  nombre: string;
+  correo: string;
+  institucion: string;
+  telefono: string;
+  mensaje: string;
+}) {
+  const { nombre, correo, institucion, telefono, mensaje } = input;
+  return `
+<div style="font-family: Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #3f3f46;">
+  <div style="border-bottom: 3px solid #0f766e; padding-bottom: 12px; margin-bottom: 16px;">
+    <span style="font-size: 18px; font-weight: bold; color: #0f766e;">ARCE</span>
+  </div>
+  <p style="font-size: 14px; line-height: 1.5;">Nueva solicitud de acceso:</p>
+  <table style="font-size: 14px; line-height: 1.6;">
+    <tr><td style="color: #71717a; padding-right: 12px;">Nombre</td><td><strong>${nombre}</strong></td></tr>
+    <tr><td style="color: #71717a; padding-right: 12px;">Correo</td><td>${correo}</td></tr>
+    <tr><td style="color: #71717a; padding-right: 12px;">Institución</td><td>${institucion}</td></tr>
+    <tr><td style="color: #71717a; padding-right: 12px;">Teléfono</td><td>${telefono || "—"}</td></tr>
+  </table>
+  ${mensaje ? `<p style="font-size: 14px; line-height: 1.5; margin-top: 12px;"><strong>Mensaje:</strong><br>${mensaje}</p>` : ""}
+</div>`.trim();
+}
 
 export async function createAccessRequest(formData: FormData) {
   const supabase = await createClient();
@@ -24,4 +51,16 @@ export async function createAccessRequest(formData: FormData) {
   });
 
   if (error) throw new Error(error.message);
+
+  try {
+    await sendEmail({
+      to: ADMIN_EMAIL,
+      subject: `Nueva solicitud de acceso — ${nombre}`,
+      html: accessRequestEmailHtml({ nombre, correo, institucion, telefono, mensaje }),
+    });
+  } catch {
+    // La solicitud ya quedó guardada en access_requests; si el correo de
+    // aviso falla (ej. Resend sin configurar) no debe tumbar el formulario,
+    // el dueño igual puede revisar las solicitudes desde Supabase.
+  }
 }
