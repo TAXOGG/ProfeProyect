@@ -408,7 +408,7 @@ export default async function HomePage() {
       </section>
 
       {/* EL DOLOR */}
-      <section className="px-5 py-16 sm:px-8">
+      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: "#ffffff" }}>
         <div className="mx-auto max-w-2xl text-center">
           <p
             className="font-[family-name:var(--font-display)] text-xl italic leading-relaxed sm:text-2xl"
@@ -492,11 +492,11 @@ export default async function HomePage() {
       </section>
 
       {/* EN DESARROLLO */}
-      <section className="px-5 py-16 sm:px-8">
+      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: "#ffffff" }}>
         <div className="mx-auto max-w-3xl">
           <div
             className="rounded-xl border-2 border-dashed p-8 text-center"
-            style={{ borderColor: "#d8cdb8" }}
+            style={{ borderColor: "#d8cdb8", backgroundColor: CREAM }}
           >
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
@@ -519,26 +519,29 @@ export default async function HomePage() {
       </section>
 
       {/* CTA FINAL */}
-      <section className="px-5 py-20 text-center sm:px-8">
-        <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+      <section
+        className="px-5 py-20 text-center sm:px-8"
+        style={{ backgroundColor: TEAL }}
+      >
+        <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-white sm:text-4xl">
           ¿Listo para dejar Excel atrás?
         </h2>
-        <p className="mx-auto mt-3 max-w-md text-sm" style={{ color: INK_MUTED }}>
+        <p className="mx-auto mt-3 max-w-md text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
           Entrá con tu cuenta, o contanos de tu institución para habilitarte una.
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
           <Link
             href={primaryHref}
-            className="rounded-md px-6 py-3 text-sm font-semibold text-white shadow-sm"
-            style={{ backgroundColor: TEAL }}
+            className="rounded-md px-6 py-3 text-sm font-semibold shadow-sm transition-transform hover:-translate-y-0.5"
+            style={{ backgroundColor: "#ffffff", color: TEAL }}
           >
             {primaryLabel}
           </Link>
           {!user && (
             <Link
               href="/solicitar-acceso"
-              className="rounded-md border px-6 py-3 text-sm font-semibold"
-              style={{ borderColor: "#d8cdb8", color: INK }}
+              className="rounded-md border px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              style={{ borderColor: "rgba(255,255,255,0.4)" }}
             >
               Solicitar acceso
             </Link>
@@ -547,9 +550,15 @@ export default async function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t px-5 py-8 text-center text-xs sm:px-8" style={{ borderColor: "#e8ddc8", color: INK_MUTED }}>
+      <footer
+        className="px-5 py-10 text-center text-xs sm:px-8"
+        style={{ backgroundColor: INK, color: "rgba(251,245,234,0.6)" }}
+      >
         <p>
-          <span className="font-[family-name:var(--font-display)] font-semibold" style={{ color: TEAL }}>
+          <span
+            className="font-[family-name:var(--font-display)] font-semibold"
+            style={{ color: "#5fc4b8" }}
+          >
             ARCE
           </span>{" "}
           — Agilización de Registros para la Calificación del Educador. Hecho en Costa Rica.
