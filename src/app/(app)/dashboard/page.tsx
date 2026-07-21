@@ -1,31 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import type { Section, SectionWithInstitution } from "@/lib/types";
+import { getActiveSections } from "@/lib/sections-data";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  const [{ data: sections }, { count: archivadasCount }] = await Promise.all([
-    supabase
-      .from("sections")
-      .select("*, institutions ( nombre )")
-      .eq("teacher_id", user!.id)
-      .eq("archivada", false)
-      .order("ciclo_escolar", { ascending: false }),
+  const [list, { count: archivadasCount }] = await Promise.all([
+    getActiveSections(),
     supabase
       .from("sections")
       .select("id", { count: "exact", head: true })
-      .eq("teacher_id", user!.id)
       .eq("archivada", true),
   ]);
-
-  const list: SectionWithInstitution[] = (sections ?? []).map((s) => ({
-    ...(s as unknown as Section),
-    institutionNombre: (s.institutions as unknown as { nombre: string } | null)?.nombre ?? "",
-  }));
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-10">

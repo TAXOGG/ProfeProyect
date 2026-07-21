@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveSections } from "@/lib/sections-data";
 import { Sidebar } from "@/components/sidebar";
 import { IdleLogoutGuard } from "@/components/idle-logout-guard";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { SyncStatusBanner } from "@/components/sync-status-banner";
 import { FeedbackBubble } from "@/components/feedback-bubble";
-import type { Section, SectionWithInstitution } from "@/lib/types";
 
 export const maxDuration = 30;
 
@@ -16,20 +16,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: profile }, { data: sections }] = await Promise.all([
+  const [{ data: profile }, sectionList] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", user.id).single(),
-    supabase
-      .from("sections")
-      .select("*, institutions ( nombre )")
-      .eq("teacher_id", user.id)
-      .eq("archivada", false)
-      .order("ciclo_escolar", { ascending: false }),
+    getActiveSections(),
   ]);
-
-  const sectionList: SectionWithInstitution[] = (sections ?? []).map((s) => ({
-    ...(s as unknown as Section),
-    institutionNombre: (s.institutions as unknown as { nombre: string } | null)?.nombre ?? "",
-  }));
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50">
