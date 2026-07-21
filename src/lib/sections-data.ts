@@ -18,3 +18,24 @@ export const getActiveSections = cache(async (): Promise<SectionWithInstitution[
     institutionNombre: (s.institutions as unknown as { nombre: string } | null)?.nombre ?? "",
   }));
 });
+
+export type SectionHeader = {
+  nombre: string;
+  nivel: string;
+  asignatura: string;
+  ciclo_escolar: number;
+  institutions: { nombre: string } | null;
+} | null;
+
+// Mismo motivo que arriba: el layout de sección solo necesita los campos de
+// encabezado, y cache() evita repetir esta consulta si otra parte del mismo
+// render la vuelve a pedir.
+export const getSectionById = cache(async (sectionId: string): Promise<SectionHeader> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("sections")
+    .select("nombre, nivel, asignatura, ciclo_escolar, institutions ( nombre )")
+    .eq("id", sectionId)
+    .single();
+  return data as SectionHeader;
+});

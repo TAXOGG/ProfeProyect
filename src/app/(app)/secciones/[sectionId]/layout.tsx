@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getSectionById } from "@/lib/sections-data";
 
 export default async function SeccionLayout({
   children,
@@ -9,13 +9,7 @@ export default async function SeccionLayout({
   params: Promise<{ sectionId: string }>;
 }) {
   const { sectionId } = await params;
-  const supabase = await createClient();
-
-  const { data: section } = await supabase
-    .from("sections")
-    .select("nombre, nivel, asignatura, ciclo_escolar, institutions ( nombre )")
-    .eq("id", sectionId)
-    .single();
+  const section = await getSectionById(sectionId);
 
   if (!section) notFound();
 

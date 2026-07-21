@@ -23,9 +23,17 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Falla transitoria del servidor de Auth (rate limit del free tier, red,
+    // cold start) — no tumbar la navegación con un 500. Se deja pasar la
+    // petición con las cookies actuales; en el peor caso la sesión no se
+    // refresca en esta única navegación, en vez de romper la página entera.
+    return supabaseResponse;
+  }
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
   const isPublicRoute = isAuthRoute || request.nextUrl.pathname.startsWith("/solicitar-acceso");
