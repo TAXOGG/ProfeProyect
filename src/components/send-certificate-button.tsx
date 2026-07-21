@@ -29,11 +29,12 @@ export function SendCertificateButton({
   }
 
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div className="flex flex-col items-center gap-1">
       <button
         type="button"
         disabled={isPending}
         onClick={() => {
+          setStatus("idle");
           setErrorMsg(null);
           startTransition(async () => {
             const result = await sendCertificadoNotas(sectionId, studentId);
@@ -47,10 +48,12 @@ export function SendCertificateButton({
         }}
         className="text-xs font-medium text-teal-700 hover:underline disabled:opacity-50"
       >
-        {isPending ? "Enviando..." : "Enviar por correo"}
+        {isPending ? "Enviando..." : status === "error" ? "Reintentar" : "Enviar por correo"}
       </button>
       {status === "error" && errorMsg && (
-        <span className="max-w-[9rem] text-[10px] leading-tight text-red-600">{errorMsg}</span>
+        <span className="max-w-[11rem] rounded border border-red-200 bg-red-50 px-1.5 py-1 text-xs font-medium leading-tight text-red-700">
+          No se pudo enviar: {errorMsg}
+        </span>
       )}
     </div>
   );
