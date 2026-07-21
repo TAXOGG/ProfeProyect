@@ -47,12 +47,16 @@ export function AttendanceGrid({
   sessions,
   records,
   asistenciaPct,
+  advertenciaPct,
+  limitePct,
 }: {
   sectionId: string;
   students: Student[];
   sessions: AttendanceSession[];
   records: AttendanceRecord[];
   asistenciaPct: number;
+  advertenciaPct?: number | null;
+  limitePct?: number | null;
 }) {
   const [isPending, startTransition] = useTransition();
   const [values, setValues] = useState<Record<string, string>>(() => {
@@ -302,9 +306,45 @@ export function AttendanceGrid({
                   : 1;
               const nota = pct * 100;
               const aporte = nota * asistenciaPct;
+              const ausenciasPct = 100 - nota;
+              const alertStatus: "rojo" | "amarillo" | "normal" =
+                limitePct != null && ausenciasPct >= limitePct * 100
+                  ? "rojo"
+                  : advertenciaPct != null && ausenciasPct >= advertenciaPct * 100
+                    ? "amarillo"
+                    : "normal";
+              const nameBg =
+                alertStatus === "rojo"
+                  ? "bg-red-50"
+                  : alertStatus === "amarillo"
+                    ? "bg-amber-50"
+                    : "bg-white";
+              const pctCellStyle =
+                alertStatus === "rojo"
+                  ? "bg-red-100 font-semibold text-red-700"
+                  : alertStatus === "amarillo"
+                    ? "bg-amber-100 font-semibold text-amber-700"
+                    : "text-zinc-700";
               return (
                 <tr key={s.id}>
-                  <td className="sticky left-0 whitespace-nowrap bg-white px-4 py-1.5 font-medium text-zinc-900">
+                  <td
+                    className={`sticky left-0 whitespace-nowrap px-4 py-1.5 font-medium text-zinc-900 ${nameBg}`}
+                    title={
+                      alertStatus === "rojo"
+                        ? `Superó el límite de ausencias (${ausenciasPct.toFixed(1)}%)`
+                        : alertStatus === "amarillo"
+                          ? `Se acerca al límite de ausencias (${ausenciasPct.toFixed(1)}%)`
+                          : undefined
+                    }
+                  >
+                    {alertStatus !== "normal" && (
+                      <span
+                        aria-hidden
+                        className={`mr-1.5 inline-block h-2 w-2 rounded-full ${
+                          alertStatus === "rojo" ? "bg-red-500" : "bg-amber-400"
+                        }`}
+                      />
+                    )}
                     {s.primer_apellido} {s.segundo_apellido} {s.nombre}
                   </td>
                   {visibleSessions.map((session) => {
@@ -334,7 +374,7 @@ export function AttendanceGrid({
                       </td>
                     );
                   })}
-                  <td className="px-3 py-1.5 text-center text-zinc-700">{nota.toFixed(1)}</td>
+                  <td className={`px-3 py-1.5 text-center ${pctCellStyle}`}>{nota.toFixed(1)}</td>
                   <td className="px-3 py-1.5 text-center text-zinc-700">{aporte.toFixed(1)}</td>
                   <td className="no-print px-3 py-1.5 text-center">
                     <SendRubroReportButton

@@ -15,6 +15,25 @@ export async function updateRubric(sectionId: string, formData: FormData) {
   const notaMinima = Number(formData.get("nota_minima"));
   const asistenciaNota = String(formData.get("asistencia_nota") ?? "").trim();
 
+  const advertenciaRaw = String(formData.get("asistencia_advertencia_pct") ?? "").trim();
+  const limiteRaw = String(formData.get("asistencia_limite_pct") ?? "").trim();
+  const asistenciaAdvertencia = advertenciaRaw ? Number(advertenciaRaw) / 100 : null;
+  const asistenciaLimite = limiteRaw ? Number(limiteRaw) / 100 : null;
+
+  if (asistenciaAdvertencia !== null && (asistenciaAdvertencia < 0 || asistenciaAdvertencia > 1)) {
+    throw new Error("El % de advertencia de asistencia debe estar entre 0% y 100%");
+  }
+  if (asistenciaLimite !== null && (asistenciaLimite < 0 || asistenciaLimite > 1)) {
+    throw new Error("El % límite de asistencia debe estar entre 0% y 100%");
+  }
+  if (
+    asistenciaAdvertencia !== null &&
+    asistenciaLimite !== null &&
+    asistenciaAdvertencia > asistenciaLimite
+  ) {
+    throw new Error("El % de advertencia (amarillo) no puede ser mayor que el % límite (rojo)");
+  }
+
   const total = cotidiano + tareas + asistencia + proyecto + pruebas;
   if (Math.abs(total - 1) > 0.001) {
     throw new Error(`Los porcentajes deben sumar 100% (suman ${(total * 100).toFixed(1)}%)`);
@@ -33,6 +52,8 @@ export async function updateRubric(sectionId: string, formData: FormData) {
       pruebas_pct: pruebas,
       tolerancia_pct: tolerancia,
       asistencia_nota: asistenciaNota || null,
+      asistencia_advertencia_pct: asistenciaAdvertencia,
+      asistencia_limite_pct: asistenciaLimite,
     })
     .eq("section_id", sectionId);
   if (rubricError) throw new Error(rubricError.message);

@@ -81,6 +81,47 @@ export function AjustesForm({
 
         <div className="mt-4 border-t border-zinc-100 pt-4">
           <label className="flex items-center text-xs font-medium text-zinc-600">
+            Umbrales de ausencias en la grilla de Asistencia
+            <HelpTooltip text="Colorean automáticamente a cada estudiante en la pantalla de Asistencia según su % de ausencias acumuladas: blanco si va bien, amarillo si se acerca al límite, rojo si ya lo superó. Déjalos vacíos para desactivar el código de color." />
+          </label>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-amber-600">% que activa amarillo</label>
+              <input
+                name="asistencia_advertencia_pct"
+                type="number"
+                step="0.01"
+                min={0}
+                max={100}
+                defaultValue={
+                  rubric.asistencia_advertencia_pct != null
+                    ? rubric.asistencia_advertencia_pct * 100
+                    : ""
+                }
+                placeholder="Ej. 15"
+                className="mt-1 w-full rounded-md border border-amber-300 px-3 py-2 text-sm placeholder:text-zinc-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-red-600">% que activa rojo</label>
+              <input
+                name="asistencia_limite_pct"
+                type="number"
+                step="0.01"
+                min={0}
+                max={100}
+                defaultValue={
+                  rubric.asistencia_limite_pct != null ? rubric.asistencia_limite_pct * 100 : ""
+                }
+                placeholder="Ej. 20"
+                className="mt-1 w-full rounded-md border border-red-300 px-3 py-2 text-sm placeholder:text-zinc-400"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 border-t border-zinc-100 pt-4">
+          <label className="flex items-center text-xs font-medium text-zinc-600">
             Política de asistencia (para el correo a padres)
             <HelpTooltip text="Este texto se incluye tal cual cuando envías por correo el reporte de Asistencia de un estudiante — por ejemplo el porcentaje de ausencias que le impide presentarse a convocatoria. Déjalo vacío si no aplica." />
           </label>

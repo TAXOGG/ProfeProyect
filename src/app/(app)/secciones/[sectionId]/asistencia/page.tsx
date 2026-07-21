@@ -54,6 +54,9 @@ export default async function AsistenciaPage({
     : { data: [] as AttendanceRecord[] };
 
   const color = moduleColor("asistencia");
+  const rubricConfig = rubric as RubricConfig | null;
+  const advertenciaPct = rubricConfig?.asistencia_advertencia_pct ?? null;
+  const limitePct = rubricConfig?.asistencia_limite_pct ?? null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -61,6 +64,25 @@ export default async function AsistenciaPage({
         <h2 className="text-lg font-semibold text-zinc-900">Asistencia</h2>
         <p className="text-sm text-zinc-600">Registra las ausencias por fecha de clase.</p>
       </div>
+
+      {limitePct != null && (
+        <div className="flex flex-wrap items-center gap-4 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-xs text-zinc-600">
+          <span className="font-medium text-zinc-500">Código de color por ausencias:</span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm border border-zinc-300 bg-white" /> Va bien
+          </span>
+          {advertenciaPct != null && (
+            <span className="flex items-center gap-1.5">
+              <span className="h-3 w-3 rounded-sm bg-amber-200" /> Se acerca al límite (≥
+              {(advertenciaPct * 100).toFixed(0)}%)
+            </span>
+          )}
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-red-300" /> Superó el límite (≥
+            {(limitePct * 100).toFixed(0)}%)
+          </span>
+        </div>
+      )}
 
       <PeriodTabs
         basePath={`/secciones/${sectionId}/asistencia`}
@@ -86,7 +108,9 @@ export default async function AsistenciaPage({
         students={studentList}
         sessions={sessionList}
         records={(records as AttendanceRecord[]) ?? []}
-        asistenciaPct={(rubric as RubricConfig)?.asistencia_pct ?? 0}
+        asistenciaPct={rubricConfig?.asistencia_pct ?? 0}
+        advertenciaPct={advertenciaPct}
+        limitePct={limitePct}
       />
     </div>
   );
