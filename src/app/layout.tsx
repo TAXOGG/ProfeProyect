@@ -13,10 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ARCE",
+  metadataBase: new URL("https://arcecr.com"),
+  title: {
+    default: "ARCE",
+    template: "%s | ARCE",
+  },
   description: "Agilización de Registros para la Calificación del Educador",
   icons: {
     icon: "/logo-arce.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -27,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >

@@ -1,7 +1,41 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Fraunces, IBM_Plex_Sans } from "next/font/google";
 import { getCurrentUser } from "@/lib/auth";
+
+const TITLE = "ARCE — Registro de Calificaciones para Docentes de Costa Rica";
+const DESCRIPTION =
+  "Olvidá el Excel de notas. ARCE es la plataforma de registro de calificaciones para docentes de Costa Rica: simple, funciona sin internet y con soporte real.";
+
+export const metadata: Metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  keywords: [
+    "registro de calificaciones",
+    "notas para docentes Costa Rica",
+    "sistema de notas MEP",
+    "alternativa a Excel para profesores",
+    "plataforma educativa Costa Rica",
+    "control de asistencia docentes",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: "https://arcecr.com",
+    siteName: "ARCE",
+    locale: "es_CR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+};
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -112,6 +146,69 @@ function IconPuzzle({ className }: { className?: string }) {
   );
 }
 
+function IconKey({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <circle cx="8" cy="8" r="3.3" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M10.3 10.3 19.5 19.5M15.3 14.5l2.2-2.2M17.8 17l2.2-2.2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconSliders({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M4.5 7h15M4.5 12h15M4.5 17h15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="9" cy="7" r="1.7" fill="currentColor" />
+      <circle cx="16" cy="12" r="1.7" fill="currentColor" />
+      <circle cx="10.5" cy="17" r="1.7" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IconClipboardCheck({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <rect x="6" y="4.5" width="12" height="16" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M9 4.5V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path d="m9 13 2 2 4-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconWifiOff({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M5 9a11 11 0 0 1 14 0M8 12.3a6.5 6.5 0 0 1 8 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="12" cy="17" r="1" fill="currentColor" />
+      <path d="M3 3l18 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconSend({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className}>
+      <path
+        d="M20 4 3 11l6 2.5m11-9.5L13.5 20l-4.5-6.5M20 4 8.5 13.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 const PAINS: Pain[] = [
   {
     icon: IconClock,
@@ -145,6 +242,20 @@ const PAINS: Pain[] = [
   },
 ];
 
+type Step = {
+  icon: (props: { className?: string }) => React.ReactNode;
+  titulo: string;
+  texto: string;
+};
+
+const STEPS: Step[] = [
+  { icon: IconKey, titulo: "Pedís acceso", texto: "Te habilitamos la cuenta" },
+  { icon: IconSliders, titulo: "Configurás tu sección", texto: "Rubros, periodos, estudiantes" },
+  { icon: IconClipboardCheck, titulo: "Registrás sin dedazos", texto: "Aviso si algo no cuadra" },
+  { icon: IconWifiOff, titulo: "Sin internet, sin problema", texto: "Se sube solo al volver" },
+  { icon: IconSend, titulo: "Compartís con un clic", texto: "PDF directo al encargado" },
+];
+
 export default async function HomePage() {
   const user = await getCurrentUser().catch(() => null);
   const primaryHref = user ? "/dashboard" : "/login";
@@ -155,6 +266,31 @@ export default async function HomePage() {
       className={`${display.variable} ${body.variable} font-[family-name:var(--font-body)]`}
       style={{ background: CREAM, color: INK }}
     >
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "ARCE",
+            alternateName: "Agilización de Registros para la Calificación del Educador",
+            applicationCategory: "EducationApplication",
+            operatingSystem: "Web",
+            description: DESCRIPTION,
+            url: "https://arcecr.com",
+            inLanguage: "es-CR",
+            areaServed: {
+              "@type": "Country",
+              name: "Costa Rica",
+            },
+            audience: {
+              "@type": "Audience",
+              audienceType: "Docentes",
+            },
+          }),
+        }}
+      />
       <style>{`
         @keyframes arceRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
         .arce-reveal { opacity: 0; animation: arceRise .8s cubic-bezier(.16,.8,.24,1) both; }
@@ -239,13 +375,25 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="arce-reveal arce-d3 flex justify-center lg:justify-end">
-            <div className="relative">
+          <div className="arce-reveal arce-d3 flex justify-center pt-4 pb-6 lg:justify-end lg:pt-0">
+            <div className="relative w-full max-w-sm">
               <div
                 className="absolute -inset-8 -z-10 rounded-full blur-3xl"
                 style={{ background: "radial-gradient(circle, rgba(15,118,110,0.18), transparent 70%)" }}
               />
-              <div className="rounded-2xl border bg-white p-5 shadow-lg" style={{ borderColor: "#e8ddc8" }}>
+              <div
+                className="absolute -right-4 -bottom-7 hidden w-56 rotate-6 rounded-xl border bg-white p-3 shadow-lg sm:block"
+                style={{ borderColor: "#e8ddc8" }}
+              >
+                <p className="mb-2 text-[10px] font-semibold" style={{ color: INK_MUTED }}>
+                  Asistencia — Marzo
+                </p>
+                <AttendanceMiniMock />
+              </div>
+              <div
+                className="relative rounded-2xl border bg-white p-5 shadow-lg"
+                style={{ borderColor: "#e8ddc8" }}
+              >
                 <div className="mb-3 flex items-center gap-2">
                   <Image src="/logo-arce.png" alt="" width={28} height={28} unoptimized />
                   <span className="text-xs font-semibold" style={{ color: INK_MUTED }}>
@@ -308,54 +456,38 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* COMO FUNCIONA */}
+      {/* COMO FUNCIONA — ruta visual, texto mínimo */}
       <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: "#f3ead9" }}>
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-5xl">
           <h2 className="text-center font-[family-name:var(--font-display)] text-3xl font-semibold">
             Así de simple
           </h2>
-          <ol
-            className="relative mt-12 space-y-10 border-l-2 pl-8"
-            style={{ borderColor: "rgba(15,118,110,0.3)" }}
-          >
-            {[
-              {
-                titulo: "Pedís acceso",
-                texto: "Nos contás de tu institución y te habilitamos la cuenta — sin registro abierto, para que el soporte siga siendo cercano.",
-              },
-              {
-                titulo: "Configurás tu sección",
-                texto: "Rubros, periodos y estudiantes, en minutos. Si ya tenés una sección armada, clonás su estructura para la siguiente.",
-              },
-              {
-                titulo: "Registrás en cada módulo, sin dedazos",
-                texto: "Cotidiano, Pruebas, Tareas, Proyecto y Asistencia. Si un puntaje se sale de lo esperado, el sistema pregunta antes de guardarlo.",
-              },
-              {
-                titulo: "Seguís trabajando sin internet",
-                texto: "Se corta la conexión del cole y no pasa nada: registrás igual, y se sube solo apenas vuelva la señal.",
-              },
-              {
-                titulo: "Compartís con un clic",
-                texto: "El resultado de cualquier módulo llega en PDF, directo al correo del encargado.",
-              },
-            ].map((s, i) => (
-              <li key={s.titulo} className="relative">
-                <span
-                  className="absolute top-0 flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white"
-                  style={{ left: "-2.6rem", backgroundColor: TEAL }}
-                >
-                  {i + 1}
-                </span>
-                <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold">
-                  {s.titulo}
-                </h3>
-                <p className="mt-1.5 text-sm leading-relaxed" style={{ color: INK_MUTED }}>
-                  {s.texto}
-                </p>
-              </li>
-            ))}
-          </ol>
+          <div className="relative mt-14">
+            <div
+              className="absolute left-0 right-0 top-7 hidden sm:block"
+              style={{ height: 2, backgroundColor: "rgba(15,118,110,0.25)" }}
+              aria-hidden
+            />
+            <div className="relative grid gap-10 sm:grid-cols-5 sm:gap-4">
+              {STEPS.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <div key={s.titulo} className="flex flex-col items-center text-center">
+                    <div
+                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white ring-4"
+                      style={{ backgroundColor: TEAL, boxShadow: "0 0 0 4px #f3ead9" }}
+                    >
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="mt-3 text-sm font-semibold">{s.titulo}</h3>
+                    <p className="mt-1 text-xs" style={{ color: INK_MUTED }}>
+                      {s.texto}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -423,6 +555,48 @@ export default async function HomePage() {
           — Agilización de Registros para la Calificación del Educador. Hecho en Costa Rica.
         </p>
       </footer>
+    </div>
+  );
+}
+
+function AttendanceMiniMock() {
+  const rows: { name: string; status: "ok" | "warn" | "risk"; pct: string }[] = [
+    { name: "Araica Bermudez S.", status: "ok", pct: "98%" },
+    { name: "Brenes Duran S.", status: "warn", pct: "84%" },
+    { name: "Briceño Guardado B.", status: "risk", pct: "68%" },
+  ];
+  const dot: Record<(typeof rows)[number]["status"], string> = {
+    ok: "#e6f2f0",
+    warn: "#fde9c8",
+    risk: "#f8d3c8",
+  };
+  const dotBorder: Record<(typeof rows)[number]["status"], string> = {
+    ok: TEAL,
+    warn: "#c98a1a",
+    risk: EMBER,
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      {rows.map((r) => (
+        <div
+          key={r.name}
+          className="flex items-center justify-between rounded-md px-2 py-1"
+          style={{ backgroundColor: dot[r.status] }}
+        >
+          <span className="flex items-center gap-1.5 text-[10px] font-medium" style={{ color: INK }}>
+            <span
+              className="h-1.5 w-1.5 rounded-full"
+              style={{ backgroundColor: dotBorder[r.status] }}
+              aria-hidden
+            />
+            {r.name}
+          </span>
+          <span className="text-[10px] font-semibold" style={{ color: dotBorder[r.status] }}>
+            {r.pct}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
