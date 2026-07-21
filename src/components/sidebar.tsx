@@ -73,6 +73,7 @@ export function Sidebar({
       >
         <Link
           href="/dashboard"
+          prefetch={false}
           className="flex items-center gap-2.5 border-b border-zinc-200 px-5 py-4 hover:bg-zinc-50"
         >
           <Image src="/logo-arce.png" alt="" width={28} height={28} className="shrink-0" />
@@ -108,6 +109,7 @@ export function Sidebar({
           </select>
           <Link
             href="/secciones/nueva"
+            prefetch={false}
             className="mt-2 block rounded-md px-2 py-1.5 text-center text-xs font-medium text-zinc-600 hover:bg-zinc-100"
           >
             + Nueva sección
@@ -117,6 +119,7 @@ export function Sidebar({
         <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-3">
           <Link
             href="/dashboard"
+            prefetch={false}
             className={`block rounded-md px-3 py-2 text-sm ${
               pathname === "/dashboard"
                 ? "bg-teal-700 text-white"
@@ -139,6 +142,7 @@ export function Sidebar({
                   <Link
                     key={m.slug}
                     href={href}
+                    prefetch={false}
                     className={`flex items-center gap-2 rounded-md px-3 py-2 text-sm ${
                       active ? "bg-teal-700 text-white" : "text-zinc-700 hover:bg-zinc-100"
                     }`}
