@@ -7,6 +7,8 @@ import { SyncStatusBanner } from "@/components/sync-status-banner";
 import { FeedbackBubble } from "@/components/feedback-bubble";
 import type { Section, SectionWithInstitution } from "@/lib/types";
 
+export const maxDuration = 30;
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const {
@@ -14,18 +16,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .single();
-
-  const { data: sections } = await supabase
-    .from("sections")
-    .select("*, institutions ( nombre )")
-    .eq("teacher_id", user.id)
-    .eq("archivada", false)
-    .order("ciclo_escolar", { ascending: false });
+  const [{ data: profile }, { data: sections }] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase
+      .from("sections")
+      .select("*, institutions ( nombre )")
+      .eq("teacher_id", user.id)
+      .eq("archivada", false)
+      .order("ciclo_escolar", { ascending: false }),
+  ]);
 
   const sectionList: SectionWithInstitution[] = (sections ?? []).map((s) => ({
     ...(s as unknown as Section),
