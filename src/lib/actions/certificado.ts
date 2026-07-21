@@ -2,7 +2,7 @@
 
 import { fetchSectionGradesData } from "@/lib/section-grades-data";
 import { renderCertificadoNotasPdf } from "@/lib/pdf/certificado-notas";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, LOGO_URL } from "@/lib/email";
 
 export type SendCertificateResult = { success?: boolean; error?: string };
 
@@ -10,9 +10,15 @@ function certificadoEmailHtml(input: { studentFullName: string; sectionLabel: st
   const { studentFullName, sectionLabel } = input;
   return `
 <div style="font-family: Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #3f3f46;">
-  <div style="border-bottom: 3px solid #0f766e; padding-bottom: 12px; margin-bottom: 16px;">
-    <span style="font-size: 18px; font-weight: bold; color: #0f766e;">ARCE</span>
-  </div>
+  <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+    <td style="padding-right: 8px; vertical-align: middle;">
+      <img src="${LOGO_URL}" width="28" height="28" alt="ARCE" style="display: block;" />
+    </td>
+    <td style="vertical-align: middle;">
+      <span style="font-size: 18px; font-weight: bold; color: #0f766e;">ARCE</span>
+    </td>
+  </tr></table>
+  <div style="border-bottom: 3px solid #0f766e; margin: 8px 0 16px;"></div>
   <p style="font-size: 14px; line-height: 1.5;">Estimado padre, madre o representante,</p>
   <p style="font-size: 14px; line-height: 1.5;">
     Adjunto encontrará el certificado de calificaciones de <strong>${studentFullName}</strong>

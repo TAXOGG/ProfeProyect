@@ -1,5 +1,8 @@
 import { Resend } from "resend";
 
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://arcecr.com";
+export const LOGO_URL = `${SITE_URL}/logo-arce.png`;
+
 let client: Resend | null = null;
 
 function getClient() {

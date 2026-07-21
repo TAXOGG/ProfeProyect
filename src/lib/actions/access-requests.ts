@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, LOGO_URL } from "@/lib/email";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "jorgeriv20770@gmail.com";
 
@@ -15,9 +15,15 @@ function accessRequestEmailHtml(input: {
   const { nombre, correo, institucion, telefono, mensaje } = input;
   return `
 <div style="font-family: Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #3f3f46;">
-  <div style="border-bottom: 3px solid #0f766e; padding-bottom: 12px; margin-bottom: 16px;">
-    <span style="font-size: 18px; font-weight: bold; color: #0f766e;">ARCE</span>
-  </div>
+  <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+    <td style="padding-right: 8px; vertical-align: middle;">
+      <img src="${LOGO_URL}" width="28" height="28" alt="ARCE" style="display: block;" />
+    </td>
+    <td style="vertical-align: middle;">
+      <span style="font-size: 18px; font-weight: bold; color: #0f766e;">ARCE</span>
+    </td>
+  </tr></table>
+  <div style="border-bottom: 3px solid #0f766e; margin: 8px 0 16px;"></div>
   <p style="font-size: 14px; line-height: 1.5;">Nueva solicitud de acceso:</p>
   <table style="font-size: 14px; line-height: 1.6;">
     <tr><td style="color: #71717a; padding-right: 12px;">Nombre</td><td><strong>${nombre}</strong></td></tr>

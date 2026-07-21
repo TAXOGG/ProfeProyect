@@ -1,4 +1,5 @@
-import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { LOGO_URL } from "@/lib/email";
 import type { Period, Section, Student } from "@/lib/types";
 import type { StudentGrades } from "@/lib/grades";
 
@@ -22,6 +23,15 @@ const styles = StyleSheet.create({
     borderBottomColor: TEAL,
     paddingBottom: 10,
     marginBottom: 16,
+  },
+  brandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logo: {
+    width: 22,
+    height: 22,
+    marginRight: 8,
   },
   brand: {
     fontSize: 14,
@@ -135,11 +145,13 @@ export function CertificadoNotasDocument({
   student,
   periods,
   grades,
+  logo,
 }: {
   section: Section;
   student: Student;
   periods: Period[];
   grades: StudentGrades;
+  logo?: Buffer;
 }) {
   const fechaEmision = new Date().toLocaleDateString("es-CR", {
     year: "numeric",
@@ -154,11 +166,14 @@ export function CertificadoNotasDocument({
     >
       <Page size="LETTER" style={styles.page}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.brand}>ARCE</Text>
-            <Text style={styles.brandSub}>
-              Agilización de Registros para la Calificación del Educador
-            </Text>
+          <View style={styles.brandRow}>
+            {logo && <Image src={logo} style={styles.logo} />}
+            <View>
+              <Text style={styles.brand}>ARCE</Text>
+              <Text style={styles.brandSub}>
+                Agilización de Registros para la Calificación del Educador
+              </Text>
+            </View>
           </View>
           <View>
             <Text style={styles.docTitle}>Certificado de Calificaciones</Text>
@@ -235,11 +250,28 @@ export function CertificadoNotasDocument({
   );
 }
 
+let logoBufferCache: Buffer | null = null;
+
+async function loadLogoBuffer(): Promise<Buffer | undefined> {
+  if (logoBufferCache) return logoBufferCache;
+  try {
+    const res = await fetch(LOGO_URL);
+    if (!res.ok) return undefined;
+    logoBufferCache = Buffer.from(await res.arrayBuffer());
+    return logoBufferCache;
+  } catch {
+    // El logo es decorativo — si no se puede descargar (ej. sin salida a
+    // internet en un entorno de pruebas), el certificado igual se genera.
+    return undefined;
+  }
+}
+
 export async function renderCertificadoNotasPdf(props: {
   section: Section;
   student: Student;
   periods: Period[];
   grades: StudentGrades;
 }): Promise<Buffer> {
-  return renderToBuffer(<CertificadoNotasDocument {...props} />);
+  const logo = await loadLogoBuffer();
+  return renderToBuffer(<CertificadoNotasDocument {...props} logo={logo} />);
 }
