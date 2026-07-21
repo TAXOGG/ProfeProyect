@@ -25,7 +25,11 @@ export function SendCertificateButton({
   }
 
   if (status === "sent") {
-    return <span className="text-xs font-medium text-emerald-600">✓ enviado</span>;
+    return (
+      <span className="inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+        ✓ Enviado
+      </span>
+    );
   }
 
   return (
@@ -37,16 +41,24 @@ export function SendCertificateButton({
           setStatus("idle");
           setErrorMsg(null);
           startTransition(async () => {
-            const result = await sendCertificadoNotas(sectionId, studentId);
-            if (result.success) {
-              setStatus("sent");
-            } else {
+            try {
+              const result = await sendCertificadoNotas(sectionId, studentId);
+              if (result.success) {
+                setStatus("sent");
+              } else {
+                setStatus("error");
+                setErrorMsg(result.error ?? "No se pudo enviar.");
+              }
+            } catch (err) {
+              // Cubre fallos inesperados (ej. la llamada a la Server Action
+              // se cae por red) que de otro modo dejarían el botón en
+              // "idle" sin ninguna señal de que algo salió mal.
               setStatus("error");
-              setErrorMsg(result.error ?? "No se pudo enviar.");
+              setErrorMsg(err instanceof Error ? err.message : "No se pudo enviar.");
             }
           });
         }}
-        className="text-xs font-medium text-teal-700 hover:underline disabled:opacity-50"
+        className="rounded border border-teal-200 bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100 disabled:opacity-50"
       >
         {isPending ? "Enviando..." : status === "error" ? "Reintentar" : "Enviar por correo"}
       </button>
