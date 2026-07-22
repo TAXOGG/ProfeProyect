@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Fraunces, IBM_Plex_Sans } from "next/font/google";
+import { Bricolage_Grotesque, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { getCurrentUser } from "@/lib/auth";
 
 const TITLE = "ARCE — Registro de Calificaciones para Docentes de Costa Rica";
@@ -37,10 +37,9 @@ export const metadata: Metadata = {
   },
 };
 
-const display = Fraunces({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["400", "600", "900"],
-  style: ["normal", "italic"],
+  weight: ["500", "700", "800"],
   variable: "--font-display",
 });
 
@@ -50,16 +49,43 @@ const body = IBM_Plex_Sans({
   variable: "--font-body",
 });
 
-const INK = "#241f1b";
-const INK_MUTED = "#5b5147";
-const CREAM = "#fbf5ea";
+const mono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
+});
+
+// Paleta: tonos fríos (no crema/cálido) + los colores reales de los 5 módulos
+// de la app (module-colors.ts), reutilizados a propósito en vez de inventar
+// un acento decorativo aparte.
+const INK = "#10201c";
+const INK_MUTED = "#5c6d68";
+const PAPER = "#f2f6f5";
+const PAPER_ALT = "#e8f0ee";
+const WHITE = "#ffffff";
 const TEAL = "#0f766e";
-const EMBER = "#c1440e";
+const TEAL_DEEP = "#0b3d38";
+const LINE = "rgba(16,32,28,0.12)";
+
+const MOD = {
+  cotidiano: "#0d9488",
+  pruebas: "#6FA83D",
+  tareas: "#0ea5e9",
+  proyecto: "#8b5cf6",
+  asistencia: "#f97316",
+  estudiantes: "#71717a",
+};
+
+const GRID_BG = {
+  backgroundImage: `linear-gradient(to right, rgba(15,118,110,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,118,110,0.08) 1px, transparent 1px)`,
+  backgroundSize: "36px 36px",
+};
 
 type Pain = {
   icon: (props: { className?: string }) => React.ReactNode;
   dolor: string;
   solucion: string;
+  color: string;
 };
 
 function IconClock({ className }: { className?: string }) {
@@ -97,12 +123,7 @@ function IconMail({ className }: { className?: string }) {
 function IconAlert({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
-      <path
-        d="M12 4.5 21 19H3L12 4.5Z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
+      <path d="M12 4.5 21 19H3L12 4.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
       <path d="M12 10.5v3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
       <circle cx="12" cy="16.3" r="0.9" fill="currentColor" />
     </svg>
@@ -175,11 +196,7 @@ function IconClipboardCheck({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className}>
       <rect x="6" y="4.5" width="12" height="16" rx="2" stroke="currentColor" strokeWidth="1.6" />
-      <path
-        d="M9 4.5V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v.5"
-        stroke="currentColor"
-        strokeWidth="1.6"
-      />
+      <path d="M9 4.5V4a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4v.5" stroke="currentColor" strokeWidth="1.6" />
       <path d="m9 13 2 2 4-4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -212,31 +229,37 @@ function IconSend({ className }: { className?: string }) {
 const PAINS: Pain[] = [
   {
     icon: IconClock,
+    color: TEAL,
     solucion: "La nota final se calcula sola, con los 5 rubros ya configurados.",
     dolor: "Antes: copiar fórmulas entre hojas de Excel un domingo en la noche, con miedo de romper algo.",
   },
   {
     icon: IconCloud,
+    color: TEAL,
     solucion: "Seguís registrando aunque se corte el internet — se sube solo al volver la señal.",
     dolor: "Antes: perder el trabajo del día porque falló la conexión del cole.",
   },
   {
     icon: IconMail,
+    color: TEAL,
     solucion: "Con un clic, el resultado de cualquier módulo llega en PDF al correo del encargado.",
     dolor: "Antes: armar el resumen a mano o mandar capturas de pantalla del Excel.",
   },
   {
     icon: IconAlert,
+    color: MOD.asistencia,
     solucion: "Aviso automático de quién necesita atención en asistencia — con la tabla oficial del MEP si querés.",
     dolor: "Antes: enterarte cuando ya no había tiempo para la convocatoria.",
   },
   {
     icon: IconLifeBuoy,
+    color: TEAL,
     solucion: "Soporte real, dentro de la plataforma, con alguien del otro lado.",
     dolor: "Antes: un video de YouTube de hace 6 años, si tenías suerte.",
   },
   {
     icon: IconCamera,
+    color: MOD.estudiantes,
     solucion: "Respaldo de fotos por estudiante, ordenado y privado.",
     dolor: "Antes: perdidas entre chats de WhatsApp y el rollo del celular.",
   },
@@ -263,8 +286,8 @@ export default async function HomePage() {
 
   return (
     <div
-      className={`${display.variable} ${body.variable} font-[family-name:var(--font-body)]`}
-      style={{ background: CREAM, color: INK }}
+      className={`${display.variable} ${body.variable} ${mono.variable} font-[family-name:var(--font-body)]`}
+      style={{ background: PAPER, color: INK }}
     >
       <script
         type="application/ld+json"
@@ -280,14 +303,8 @@ export default async function HomePage() {
             description: DESCRIPTION,
             url: "https://arcecr.com",
             inLanguage: "es-CR",
-            areaServed: {
-              "@type": "Country",
-              name: "Costa Rica",
-            },
-            audience: {
-              "@type": "Audience",
-              audienceType: "Docentes",
-            },
+            areaServed: { "@type": "Country", name: "Costa Rica" },
+            audience: { "@type": "Audience", audienceType: "Docentes" },
           }),
         }}
       />
@@ -298,8 +315,8 @@ export default async function HomePage() {
         .arce-d2 { animation-delay: .2s; }
         .arce-d3 { animation-delay: .35s; }
         .arce-d4 { animation-delay: .5s; }
-        .arce-card { transition: transform .25s ease, box-shadow .25s ease; }
-        .arce-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -12px rgba(36,31,27,0.25); }
+        .arce-card { transition: transform .2s ease, border-color .2s ease; }
+        .arce-card:hover { transform: translateY(-2px); border-color: rgba(15,118,110,0.4) !important; }
         @media (prefers-reduced-motion: reduce) {
           .arce-reveal { animation: none; opacity: 1; }
           .arce-card:hover { transform: none; }
@@ -309,17 +326,14 @@ export default async function HomePage() {
       {/* NAV */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-2.5">
-          <Image src="/logo-arce.png" alt="" width={32} height={32} unoptimized />
-          <span
-            className="font-[family-name:var(--font-display)] text-lg font-semibold"
-            style={{ color: TEAL }}
-          >
+          <Image src="/logo-arce.png" alt="" width={30} height={30} unoptimized />
+          <span className="font-[family-name:var(--font-display)] text-lg font-bold" style={{ color: TEAL }}>
             ARCE
           </span>
         </div>
         <Link
           href={primaryHref}
-          className="rounded-md px-4 py-2 text-sm font-medium text-white transition-colors"
+          className="rounded-sm px-4 py-2 text-sm font-medium text-white transition-colors"
           style={{ backgroundColor: TEAL }}
         >
           {primaryLabel}
@@ -327,23 +341,16 @@ export default async function HomePage() {
       </header>
 
       {/* HERO */}
-      <section
-        className="relative overflow-hidden px-5 pt-10 pb-16 sm:px-8 sm:pt-16 sm:pb-24"
-        style={{
-          backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent 27px, rgba(15,118,110,0.07) 28px), radial-gradient(ellipse 60% 50% at 85% 15%, rgba(15,118,110,0.12), transparent)`,
-        }}
-      >
-        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="relative overflow-hidden px-5 pt-10 pb-16 sm:px-8 sm:pt-16 sm:pb-24" style={GRID_BG}>
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <p
-              className="arce-reveal arce-d1 text-xs font-semibold uppercase tracking-[0.16em]"
-              style={{ color: EMBER }}
+              className="arce-reveal arce-d1 font-[family-name:var(--font-mono)] text-xs font-medium uppercase tracking-[0.1em]"
+              style={{ color: TEAL }}
             >
-              Hecho por y para docentes de Costa Rica
+              [ Para docentes de Costa Rica ]
             </p>
-            <h1
-              className="arce-reveal arce-d2 mt-4 font-[family-name:var(--font-display)] text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl"
-            >
+            <h1 className="arce-reveal arce-d2 mt-4 font-[family-name:var(--font-display)] text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl">
               Basta de pelear
               <br />
               con Excel.
@@ -355,7 +362,7 @@ export default async function HomePage() {
             <div className="arce-reveal arce-d4 mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href={primaryHref}
-                className="rounded-md px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
+                className="rounded-sm px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5"
                 style={{ backgroundColor: TEAL }}
               >
                 {primaryLabel}
@@ -363,88 +370,66 @@ export default async function HomePage() {
               {!user && (
                 <Link
                   href="/solicitar-acceso"
-                  className="rounded-md border px-6 py-3 text-sm font-semibold transition-colors hover:bg-white"
-                  style={{ borderColor: "#d8cdb8", color: INK }}
+                  className="rounded-sm border px-6 py-3 text-sm font-semibold transition-colors hover:bg-white"
+                  style={{ borderColor: LINE, color: INK }}
                 >
                   Solicitar acceso
                 </Link>
               )}
             </div>
-            <p className="arce-reveal arce-d4 mt-4 text-xs" style={{ color: INK_MUTED }}>
+            <p
+              className="arce-reveal arce-d4 mt-4 font-[family-name:var(--font-mono)] text-xs"
+              style={{ color: INK_MUTED }}
+            >
               Acceso por invitación — así mantenemos el soporte cercano, no genérico.
             </p>
           </div>
 
-          <div className="arce-reveal arce-d3 flex justify-center pt-4 pb-6 lg:justify-end lg:pt-0">
-            <div className="relative w-full max-w-sm">
-              <div
-                className="absolute -inset-8 -z-10 rounded-full blur-3xl"
-                style={{ background: "radial-gradient(circle, rgba(15,118,110,0.18), transparent 70%)" }}
-              />
-              <div
-                className="absolute -right-4 -bottom-7 hidden w-56 rotate-6 rounded-xl border bg-white p-3 shadow-lg sm:block"
-                style={{ borderColor: "#e8ddc8" }}
-              >
-                <p className="mb-2 text-[10px] font-semibold" style={{ color: INK_MUTED }}>
-                  Asistencia — Marzo
-                </p>
-                <AttendanceMiniMock />
-              </div>
-              <div
-                className="relative rounded-2xl border bg-white p-5 shadow-lg"
-                style={{ borderColor: "#e8ddc8" }}
-              >
-                <div className="mb-3 flex items-center gap-2">
-                  <Image src="/logo-arce.png" alt="" width={28} height={28} unoptimized />
-                  <span className="text-xs font-semibold" style={{ color: INK_MUTED }}>
-                    Física — 10-1
-                  </span>
-                </div>
-                <MiniGradeCard />
-              </div>
-            </div>
+          <div className="arce-reveal arce-d3 flex justify-center lg:justify-end">
+            <ProductWindowMock />
           </div>
         </div>
       </section>
 
       {/* EL DOLOR */}
-      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: "#ffffff" }}>
+      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: WHITE }}>
         <div className="mx-auto max-w-2xl text-center">
-          <p
-            className="font-[family-name:var(--font-display)] text-xl italic leading-relaxed sm:text-2xl"
-            style={{ color: INK_MUTED }}
+          <span
+            className="font-[family-name:var(--font-display)] text-5xl font-extrabold leading-none"
+            style={{ color: PAPER_ALT }}
+            aria-hidden
           >
-            &ldquo;Son las 9pm de un domingo. Excel abierto en una pestaña, la calculadora del
-            celular en la otra, y todavía te faltan dos periodos por revisar. Una fórmula se
-            corrió sin que la vieras y ahora nada cuadra.&rdquo;
+            &ldquo;
+          </span>
+          <p className="-mt-3 text-xl leading-relaxed sm:text-2xl" style={{ color: INK }}>
+            Son las 9pm de un domingo. Excel abierto en una pestaña, la calculadora del celular en
+            la otra, y todavía te faltan dos periodos por revisar. Una fórmula se corrió sin que
+            la vieras y ahora nada cuadra.
           </p>
-          <p className="mt-4 text-sm font-semibold" style={{ color: TEAL }}>
+          <p
+            className="mt-4 font-[family-name:var(--font-mono)] text-xs font-medium uppercase tracking-wide"
+            style={{ color: TEAL }}
+          >
             ¿Te suena conocido? No tiene que ser así.
           </p>
         </div>
       </section>
 
       {/* DOLOR -> SOLUCION */}
-      <section className="px-5 pb-16 sm:px-8">
+      <section className="px-5 py-16 sm:px-8">
         <div className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {PAINS.map((p, i) => {
             const Icon = p.icon;
             return (
               <div
                 key={i}
-                className="arce-card rounded-xl border bg-white p-6"
-                style={{ borderColor: "#e8ddc8" }}
+                className="arce-card rounded-md border bg-white p-6"
+                style={{ borderColor: LINE }}
               >
-                <div
-                  className="mb-4 flex h-11 w-11 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "#e6f2f0", color: TEAL }}
-                >
-                  <Icon className="h-5.5 w-5.5" />
-                </div>
-                <p
-                  className="font-[family-name:var(--font-display)] text-lg font-semibold leading-snug"
-                  style={{ color: INK }}
-                >
+                <span style={{ color: p.color }}>
+                  <Icon className="h-6 w-6" />
+                </span>
+                <p className="mt-4 text-base font-semibold leading-snug" style={{ color: INK }}>
                   {p.solucion}
                 </p>
                 <p className="mt-2.5 text-xs leading-relaxed" style={{ color: INK_MUTED }}>
@@ -457,27 +442,33 @@ export default async function HomePage() {
       </section>
 
       {/* COMO FUNCIONA — ruta visual, texto mínimo */}
-      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: "#f3ead9" }}>
+      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: PAPER_ALT }}>
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center font-[family-name:var(--font-display)] text-3xl font-semibold">
+          <h2 className="text-center font-[family-name:var(--font-display)] text-3xl font-extrabold">
             Así de simple
           </h2>
           <div className="relative mt-14">
             <div
-              className="absolute left-0 right-0 top-7 hidden sm:block"
-              style={{ height: 2, backgroundColor: "rgba(15,118,110,0.25)" }}
+              className="absolute left-0 right-0 top-6 hidden sm:block"
+              style={{ height: 1, backgroundColor: "rgba(15,118,110,0.3)" }}
               aria-hidden
             />
             <div className="relative grid gap-10 sm:grid-cols-5 sm:gap-4">
-              {STEPS.map((s) => {
+              {STEPS.map((s, i) => {
                 const Icon = s.icon;
                 return (
                   <div key={s.titulo} className="flex flex-col items-center text-center">
                     <div
-                      className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white ring-4"
-                      style={{ backgroundColor: TEAL, boxShadow: "0 0 0 4px #f3ead9" }}
+                      className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-sm border bg-white"
+                      style={{ borderColor: TEAL, color: TEAL }}
                     >
-                      <Icon className="h-6 w-6" />
+                      <Icon className="h-5 w-5" />
+                      <span
+                        className="absolute -top-2.5 -right-2.5 flex h-5 w-5 items-center justify-center rounded-sm font-[family-name:var(--font-mono)] text-[10px] font-medium text-white"
+                        style={{ backgroundColor: TEAL }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
                     </div>
                     <h3 className="mt-3 text-sm font-semibold">{s.titulo}</h3>
                     <p className="mt-1 text-xs" style={{ color: INK_MUTED }}>
@@ -492,20 +483,17 @@ export default async function HomePage() {
       </section>
 
       {/* EN DESARROLLO */}
-      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: "#ffffff" }}>
+      <section className="px-5 py-16 sm:px-8" style={{ backgroundColor: WHITE }}>
         <div className="mx-auto max-w-3xl">
-          <div
-            className="rounded-xl border-2 border-dashed p-8 text-center"
-            style={{ borderColor: "#d8cdb8", backgroundColor: CREAM }}
-          >
+          <div className="rounded-md border-2 border-dashed p-8 text-center" style={{ borderColor: LINE, backgroundColor: PAPER }}>
             <span
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
-              style={{ backgroundColor: "#fdece2", color: EMBER }}
+              className="inline-flex items-center gap-1.5 rounded-sm px-3 py-1 font-[family-name:var(--font-mono)] text-xs font-medium uppercase tracking-wide text-white"
+              style={{ backgroundColor: MOD.asistencia }}
             >
               <IconPuzzle className="h-3.5 w-3.5" />
               En desarrollo
             </span>
-            <h2 className="mt-4 font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl">
+            <h2 className="mt-4 font-[family-name:var(--font-display)] text-2xl font-extrabold sm:text-3xl">
               Y esto apenas empieza
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed" style={{ color: INK_MUTED }}>
@@ -519,46 +507,48 @@ export default async function HomePage() {
       </section>
 
       {/* CTA FINAL */}
-      <section
-        className="px-5 py-20 text-center sm:px-8"
-        style={{ backgroundColor: TEAL }}
-      >
-        <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-white sm:text-4xl">
-          ¿Listo para dejar Excel atrás?
-        </h2>
-        <p className="mx-auto mt-3 max-w-md text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
-          Entrá con tu cuenta, o contanos de tu institución para habilitarte una.
-        </p>
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href={primaryHref}
-            className="rounded-md px-6 py-3 text-sm font-semibold shadow-sm transition-transform hover:-translate-y-0.5"
-            style={{ backgroundColor: "#ffffff", color: TEAL }}
-          >
-            {primaryLabel}
-          </Link>
-          {!user && (
+      <section className="relative overflow-hidden px-5 py-20 text-center sm:px-8" style={{ backgroundColor: TEAL }}>
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+          }}
+          aria-hidden
+        />
+        <div className="relative">
+          <h2 className="font-[family-name:var(--font-display)] text-3xl font-extrabold text-white sm:text-4xl">
+            ¿Listo para dejar Excel atrás?
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-sm" style={{ color: "rgba(255,255,255,0.8)" }}>
+            Entrá con tu cuenta, o contanos de tu institución para habilitarte una.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/solicitar-acceso"
-              className="rounded-md border px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-              style={{ borderColor: "rgba(255,255,255,0.4)" }}
+              href={primaryHref}
+              className="rounded-sm px-6 py-3 text-sm font-semibold shadow-sm transition-transform hover:-translate-y-0.5"
+              style={{ backgroundColor: WHITE, color: TEAL }}
             >
-              Solicitar acceso
+              {primaryLabel}
             </Link>
-          )}
+            {!user && (
+              <Link
+                href="/solicitar-acceso"
+                className="rounded-sm border px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                style={{ borderColor: "rgba(255,255,255,0.4)" }}
+              >
+                Solicitar acceso
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer
-        className="px-5 py-10 text-center text-xs sm:px-8"
-        style={{ backgroundColor: INK, color: "rgba(251,245,234,0.6)" }}
-      >
+      <footer className="px-5 py-10 text-center text-xs sm:px-8" style={{ backgroundColor: TEAL_DEEP, color: "rgba(242,246,245,0.6)" }}>
         <p>
-          <span
-            className="font-[family-name:var(--font-display)] font-semibold"
-            style={{ color: "#5fc4b8" }}
-          >
+          <span className="font-[family-name:var(--font-display)] font-bold" style={{ color: "#5fc4b8" }}>
             ARCE
           </span>{" "}
           — Agilización de Registros para la Calificación del Educador. Hecho en Costa Rica.
@@ -568,88 +558,85 @@ export default async function HomePage() {
   );
 }
 
-function AttendanceMiniMock() {
-  const rows: { name: string; status: "ok" | "warn" | "risk"; pct: string }[] = [
-    { name: "Araica Bermudez S.", status: "ok", pct: "98%" },
-    { name: "Brenes Duran S.", status: "warn", pct: "84%" },
-    { name: "Briceño Guardado B.", status: "risk", pct: "68%" },
-  ];
-  const dot: Record<(typeof rows)[number]["status"], string> = {
-    ok: "#e6f2f0",
-    warn: "#fde9c8",
-    risk: "#f8d3c8",
-  };
-  const dotBorder: Record<(typeof rows)[number]["status"], string> = {
-    ok: TEAL,
-    warn: "#c98a1a",
-    risk: EMBER,
-  };
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      {rows.map((r) => (
-        <div
-          key={r.name}
-          className="flex items-center justify-between rounded-md px-2 py-1"
-          style={{ backgroundColor: dot[r.status] }}
-        >
-          <span className="flex items-center gap-1.5 text-[10px] font-medium" style={{ color: INK }}>
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: dotBorder[r.status] }}
-              aria-hidden
-            />
-            {r.name}
-          </span>
-          <span className="text-[10px] font-semibold" style={{ color: dotBorder[r.status] }}>
-            {r.pct}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function MiniGradeCard() {
-  const rows = [
+function ProductWindowMock() {
+  const students = [
     { name: "Araica Bermudez S.", cot: 90, tar: 95, prue: 85, proy: 100, asis: 98 },
     { name: "Brenes Duran S.", cot: 75, tar: 80, prue: 70, proy: 90, asis: 92 },
     { name: "Briceño Guardado B.", cot: 100, tar: 100, prue: 95, proy: 100, asis: 100 },
   ];
-  const cols: { key: keyof (typeof rows)[number]; label: string; color: string }[] = [
-    { key: "cot", label: "Cot.", color: "#0d9488" },
-    { key: "tar", label: "Tar.", color: "#0ea5e9" },
-    { key: "prue", label: "Prue.", color: "#6FA83D" },
-    { key: "proy", label: "Proy.", color: "#8b5cf6" },
-    { key: "asis", label: "Asis.", color: "#f97316" },
+  const modules: { key: keyof (typeof students)[number]; label: string; color: string }[] = [
+    { key: "cot", label: "COT", color: MOD.cotidiano },
+    { key: "prue", label: "PRU", color: MOD.pruebas },
+    { key: "tar", label: "TAR", color: MOD.tareas },
+    { key: "proy", label: "PRO", color: MOD.proyecto },
+    { key: "asis", label: "ASI", color: MOD.asistencia },
   ];
 
   return (
-    <table className="w-full text-[11px]" style={{ color: INK_MUTED }}>
-      <thead>
-        <tr>
-          <th className="pb-1.5 text-left font-medium">Estudiante</th>
-          {cols.map((c) => (
-            <th key={c.key} className="pb-1.5 text-center font-medium" style={{ color: c.color }}>
-              {c.label}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.name} className="border-t" style={{ borderColor: "#eee2cd" }}>
-            <td className="whitespace-nowrap py-1.5 pr-3 font-medium" style={{ color: INK }}>
-              {r.name}
-            </td>
-            {cols.map((c) => (
-              <td key={c.key} className="py-1.5 text-center">
-                {r[c.key]}
-              </td>
-            ))}
-          </tr>
+    <div className="w-full max-w-md overflow-hidden rounded-md border shadow-lg" style={{ borderColor: LINE, backgroundColor: WHITE }}>
+      {/* chrome bar */}
+      <div className="flex items-center gap-2 border-b px-3 py-2.5" style={{ borderColor: LINE, backgroundColor: PAPER }}>
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#c7d2d0" }} />
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#c7d2d0" }} />
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "#c7d2d0" }} />
+        <span
+          className="ml-2 font-[family-name:var(--font-mono)] text-[10px]"
+          style={{ color: INK_MUTED }}
+        >
+          arcecr.com/física-10-1
+        </span>
+      </div>
+
+      {/* module tabs */}
+      <div className="flex gap-1 border-b px-3 pt-2.5" style={{ borderColor: LINE }}>
+        {modules.map((m, i) => (
+          <span
+            key={m.key}
+            className="rounded-t-sm px-2.5 py-1.5 font-[family-name:var(--font-mono)] text-[10px] font-medium"
+            style={{
+              color: i === 0 ? WHITE : m.color,
+              backgroundColor: i === 0 ? m.color : "transparent",
+            }}
+          >
+            {m.label}
+          </span>
         ))}
-      </tbody>
-    </table>
+      </div>
+
+      {/* grade table */}
+      <div className="p-3">
+        <table className="w-full font-[family-name:var(--font-mono)] text-[11px]">
+          <thead>
+            <tr>
+              <th className="pb-2 text-left font-medium" style={{ color: INK_MUTED }}>
+                Estudiante
+              </th>
+              {modules.map((m) => (
+                <th key={m.key} className="pb-2 text-center font-medium" style={{ color: m.color }}>
+                  {m.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((s) => (
+              <tr key={s.name} className="border-t" style={{ borderColor: LINE }}>
+                <td
+                  className="whitespace-nowrap py-1.5 pr-3 font-[family-name:var(--font-body)] font-medium"
+                  style={{ color: INK }}
+                >
+                  {s.name}
+                </td>
+                {modules.map((m) => (
+                  <td key={m.key} className="py-1.5 text-center tabular-nums" style={{ color: INK_MUTED }}>
+                    {s[m.key]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
