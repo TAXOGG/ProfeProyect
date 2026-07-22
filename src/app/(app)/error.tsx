@@ -38,6 +38,12 @@ export default function AppError({
           Ir al inicio
         </a>
       </div>
+      <p className="text-xs text-zinc-400">
+        Si &ldquo;Reintentar&rdquo; no funciona, probá un refresco forzado (borra la versión
+        guardada en tu navegador):{" "}
+        <span className="font-medium text-zinc-500">Ctrl + Shift + R</span> en Windows, o{" "}
+        <span className="font-medium text-zinc-500">Cmd + Shift + R</span> en Mac.
+      </p>
     </div>
   );
 }

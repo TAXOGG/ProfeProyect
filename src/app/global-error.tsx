@@ -14,6 +14,10 @@ export default function GlobalError({
         <button onClick={reset} style={{ padding: "0.5rem 1rem", marginTop: "1rem" }}>
           Reintentar
         </button>
+        <p style={{ marginTop: "1.5rem", fontSize: "0.8rem", color: "#71717a" }}>
+          Si sigue sin cargar, probá un refresco forzado (borra la versión guardada en tu
+          navegador): Ctrl + Shift + R en Windows, o Cmd + Shift + R en Mac.
+        </p>
       </body>
     </html>
   );
