@@ -18,6 +18,12 @@ const MODULES = [
   { slug: "ajustes", label: "Ajustes" },
 ];
 
+const ADMIN_LINKS = [
+  { href: "/admin/nuevo-usuario", label: "+ Nuevo usuario" },
+  { href: "/admin/usuarios", label: "Usuarios" },
+  { href: "/admin/feedback", label: "Feedback" },
+];
+
 export function Sidebar({
   teacherName,
   sections,
@@ -139,17 +145,25 @@ export function Sidebar({
           </Link>
 
           {isAdmin && (
-            <Link
-              href="/admin/nuevo-usuario"
-              prefetch={false}
-              className={`block rounded-md px-3 py-2 text-sm ${
-                pathname === "/admin/nuevo-usuario"
-                  ? "bg-teal-700 text-white"
-                  : "text-zinc-700 hover:bg-zinc-100"
-              }`}
-            >
-              + Nuevo usuario
-            </Link>
+            <>
+              <p className="px-3 pt-4 pb-1 text-xs font-medium uppercase tracking-wide text-zinc-400">
+                Admin
+              </p>
+              {ADMIN_LINKS.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  prefetch={false}
+                  className={`block rounded-md px-3 py-2 text-sm ${
+                    pathname === l.href
+                      ? "bg-teal-700 text-white"
+                      : "text-zinc-700 hover:bg-zinc-100"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </>
           )}
 
           {currentSection && (
