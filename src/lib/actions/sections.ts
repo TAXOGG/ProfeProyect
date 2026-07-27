@@ -34,7 +34,7 @@ export async function deleteSectionPermanently(sectionId: string) {
   revalidatePath("/secciones/archivadas");
 }
 
-async function findOrCreateInstitution(
+export async function findOrCreateInstitution(
   supabase: Awaited<ReturnType<typeof createClient>>,
   nombre: string,
   direccionRegional: string,

@@ -21,9 +21,11 @@ const MODULES = [
 export function Sidebar({
   teacherName,
   sections,
+  isAdmin,
 }: {
   teacherName: string;
   sections: SectionWithInstitution[];
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -135,6 +137,20 @@ export function Sidebar({
           >
             Inicio
           </Link>
+
+          {isAdmin && (
+            <Link
+              href="/admin/nuevo-usuario"
+              prefetch={false}
+              className={`block rounded-md px-3 py-2 text-sm ${
+                pathname === "/admin/nuevo-usuario"
+                  ? "bg-teal-700 text-white"
+                  : "text-zinc-700 hover:bg-zinc-100"
+              }`}
+            >
+              + Nuevo usuario
+            </Link>
+          )}
 
           {currentSection && (
             <>

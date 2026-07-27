@@ -10,6 +10,8 @@ import { FeedbackBubble } from "@/components/feedback-bubble";
 
 export const maxDuration = 30;
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "jorgeriv20770@gmail.com";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -26,7 +28,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <IdleLogoutGuard />
       <SyncStatusBanner />
       <div className="flex flex-1 flex-col md:flex-row">
-        <Sidebar teacherName={profile?.full_name ?? ""} sections={sectionList} />
+        <Sidebar
+          teacherName={profile?.full_name ?? ""}
+          sections={sectionList}
+          isAdmin={user.email === ADMIN_EMAIL}
+        />
         <main className="flex-1 overflow-y-auto md:h-screen">{children}</main>
       </div>
       <FeedbackBubble />
