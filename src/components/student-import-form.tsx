@@ -69,7 +69,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
     <div className="max-w-2xl rounded-lg border border-zinc-200 bg-white p-5">
       <h3 className="flex items-center text-sm font-semibold text-zinc-900">
         Importar estudiantes desde Excel/CSV
-        <HelpTooltip text='Sube tu archivo y luego indica qué columna corresponde a cada dato (Primer Apellido y Nombre son obligatorios). Los estudiantes se agregan al final de la lista actual, no reemplazan a los existentes.' />
+        <HelpTooltip text='Sube tu archivo y luego indica qué columna corresponde a cada dato (Primer Apellido y Nombre son obligatorios). Los estudiantes se suman a la lista actual (no reemplazan a los existentes) y la lista completa queda reordenada alfabéticamente por apellido.' />
       </h3>
 
       {!preview && (

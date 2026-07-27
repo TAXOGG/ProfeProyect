@@ -190,6 +190,13 @@ export async function importStudentsFromGrid(
   const { error } = await supabase.from("students").insert(toInsert);
   if (error) return { error: error.message };
 
+  // La lista siempre debe quedar ordenada por apellido, venga la data de un
+  // alta manual o de un archivo importado.
+  const { error: reorderError } = await supabase.rpc("reorder_students_by_apellido", {
+    p_section_id: sectionId,
+  });
+  if (reorderError) return { error: reorderError.message };
+
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
   return { success: true, imported: toInsert.length, skipped };
 }
@@ -241,7 +248,10 @@ export async function createStudent(sectionId: string, formData: FormData) {
 
   // Reordena/renumera la sección por apellido para que el nuevo estudiante
   // quede en su posición alfabética, no al final de la lista.
-  await supabase.rpc("reorder_students_by_apellido", { p_section_id: sectionId });
+  const { error: reorderError } = await supabase.rpc("reorder_students_by_apellido", {
+    p_section_id: sectionId,
+  });
+  if (reorderError) throw new Error(reorderError.message);
 
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
 }
