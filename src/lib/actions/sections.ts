@@ -34,6 +34,11 @@ export async function deleteSectionPermanently(sectionId: string) {
   revalidatePath("/secciones/archivadas");
 }
 
+// Reutiliza una institución existente si el nombre coincide una vez
+// normalizado (sin acentos, sin artículos como "de"/"la", espacios
+// colapsados) — así "Liceo de Santa Ana" y "Liceo Santa Ana" no terminan
+// como dos registros distintos. La comparación corre en la base (función
+// find_or_create_institution) para poder usar unaccent() de Postgres.
 export async function findOrCreateInstitution(
   supabase: Awaited<ReturnType<typeof createClient>>,
   nombre: string,
@@ -42,29 +47,16 @@ export async function findOrCreateInstitution(
   provincia: string,
   canton: string,
 ) {
-  const { data: existente } = await supabase
-    .from("institutions")
-    .select("id")
-    .ilike("nombre", nombre)
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("find_or_create_institution", {
+    p_nombre: nombre,
+    p_direccion_regional: direccionRegional,
+    p_circuito: circuito,
+    p_provincia: provincia,
+    p_canton: canton,
+  });
 
-  if (existente) return existente.id;
-
-  const { data: nueva, error } = await supabase
-    .from("institutions")
-    .insert({
-      nombre,
-      direccion_regional: direccionRegional || null,
-      circuito: circuito || null,
-      provincia: provincia || null,
-      canton: canton || null,
-    })
-    .select("id")
-    .single();
-
-  if (error || !nueva) throw new Error(error?.message ?? "No se pudo crear la institución");
-  return nueva.id;
+  if (error || !data) throw new Error(error?.message ?? "No se pudo crear la institución");
+  return data as string;
 }
 
 export type CreateSectionState = { error?: string } | null;
