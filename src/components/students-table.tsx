@@ -72,7 +72,9 @@ export function StudentsTable({
                   {s.primer_apellido} {s.segundo_apellido} {s.nombre}
                 </td>
                 <td className="px-4 py-2 text-zinc-500">{s.identificacion ?? "—"}</td>
-                <td className="px-4 py-2 text-zinc-500">{s.sexo ?? "—"}</td>
+                <td className="px-4 py-2 text-zinc-500">
+                  {s.sexo === "H" ? "Hombre" : s.sexo === "M" ? "Mujer" : "—"}
+                </td>
                 <td className="px-4 py-2 text-zinc-500">{s.tipo_apoyo ?? "—"}</td>
                 <td className="px-4 py-2">
                   <StudentRowActions sectionId={sectionId} studentId={s.id} estado={s.estado} />

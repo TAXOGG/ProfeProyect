@@ -81,8 +81,8 @@ export default async function EstudiantesPage({
             <option value="" disabled>
               Sexo
             </option>
-            <option value="M">Masculino</option>
-            <option value="F">Femenino</option>
+            <option value="H">Hombre</option>
+            <option value="M">Mujer</option>
           </select>
           <input
             name="tipo_apoyo"

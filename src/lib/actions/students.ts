@@ -30,6 +30,16 @@ function normalizeHeader(h: string) {
   return h.toString().trim().toLowerCase().normalize("NFD").replace(DIACRITICS_RE, "");
 }
 
+// "M" ya no significa Masculino: el código vigente es H(Hombre)/M(Mujer).
+// "F" (Femenino) se sigue aceptando en archivos importados como sinónimo de Mujer.
+function parseSexo(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const s = raw.trim().toUpperCase().normalize("NFD").replace(DIACRITICS_RE, "");
+  if (s === "H" || s.startsWith("HOMBRE") || s.startsWith("MASC")) return "H";
+  if (s === "M" || s === "F" || s.startsWith("MUJER") || s.startsWith("FEM")) return "M";
+  return null;
+}
+
 function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -160,17 +170,13 @@ export async function importStudentsFromGrid(
       skipped++;
       continue;
     }
-    let sexo: string | null = null;
-    if (mapped.sexo) {
-      const s = mapped.sexo.toUpperCase();
-      sexo = s.startsWith("M") ? "M" : s.startsWith("F") ? "F" : null;
-    }
+    const sexo = parseSexo(mapped.sexo);
     toInsert.push({
       section_id: sectionId,
       numero: nextNumero++,
-      primer_apellido: mapped.primer_apellido,
-      segundo_apellido: mapped.segundo_apellido || null,
-      nombre: mapped.nombre,
+      primer_apellido: mapped.primer_apellido.toUpperCase(),
+      segundo_apellido: mapped.segundo_apellido ? mapped.segundo_apellido.toUpperCase() : null,
+      nombre: mapped.nombre.toUpperCase(),
       identificacion: mapped.identificacion || null,
       sexo,
       tipo_apoyo: mapped.tipo_apoyo || "No tiene",
@@ -205,9 +211,9 @@ async function maxStudentNumero(
 export async function createStudent(sectionId: string, formData: FormData) {
   const supabase = await createClient();
 
-  const primerApellido = String(formData.get("primer_apellido") ?? "").trim();
-  const segundoApellido = String(formData.get("segundo_apellido") ?? "").trim();
-  const nombre = String(formData.get("nombre") ?? "").trim();
+  const primerApellido = String(formData.get("primer_apellido") ?? "").trim().toUpperCase();
+  const segundoApellido = String(formData.get("segundo_apellido") ?? "").trim().toUpperCase();
+  const nombre = String(formData.get("nombre") ?? "").trim().toUpperCase();
   if (!primerApellido || !nombre) return;
 
   const { count } = await supabase
@@ -232,6 +238,11 @@ export async function createStudent(sectionId: string, formData: FormData) {
   );
 
   if (error) throw new Error(error);
+
+  // Reordena/renumera la sección por apellido para que el nuevo estudiante
+  // quede en su posición alfabética, no al final de la lista.
+  await supabase.rpc("reorder_students_by_apellido", { p_section_id: sectionId });
+
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
 }
 
