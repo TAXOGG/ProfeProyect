@@ -10,7 +10,9 @@ import { FeedbackBubble } from "@/components/feedback-bubble";
 
 export const maxDuration = 30;
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "jorgeriv20770@gmail.com";
+// Distinta de ADMIN_EMAIL (esa es a dónde llegan los avisos de solicitudes
+// de acceso). Esta decide a quién se le muestra el link "+ Nuevo usuario".
+const ADMIN_LOGIN_EMAIL = process.env.ADMIN_LOGIN_EMAIL || "docente.prueba@profeproyecto.local";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -31,7 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Sidebar
           teacherName={profile?.full_name ?? ""}
           sections={sectionList}
-          isAdmin={user.email === ADMIN_EMAIL}
+          isAdmin={user.email === ADMIN_LOGIN_EMAIL}
         />
         <main className="flex-1 overflow-y-auto md:h-screen">{children}</main>
       </div>

@@ -7,11 +7,13 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { findOrCreateInstitution } from "@/lib/actions/sections";
 import { sendEmail, LOGO_URL, SITE_URL } from "@/lib/email";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "jorgeriv20770@gmail.com";
+// Distinta de ADMIN_EMAIL (esa es a dónde llegan los avisos de solicitudes
+// de acceso). Esta decide quién puede entrar a /admin/nuevo-usuario.
+const ADMIN_LOGIN_EMAIL = process.env.ADMIN_LOGIN_EMAIL || "docente.prueba@profeproyecto.local";
 
 export async function requireAdmin() {
   const user = await getCurrentUser();
-  if (!user || user.email !== ADMIN_EMAIL) {
+  if (!user || user.email !== ADMIN_LOGIN_EMAIL) {
     redirect("/dashboard");
   }
   return user;
