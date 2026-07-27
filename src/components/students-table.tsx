@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { StudentRowActions } from "@/components/student-row-actions";
 import { StudentContactModal } from "@/components/student-contact-modal";
+import { reorderStudents } from "@/lib/actions/students";
 import type { Student } from "@/lib/types";
 
 const DIACRITICS_RE = new RegExp("[\\u0300-\\u036f]", "g");
@@ -21,6 +22,7 @@ export function StudentsTable({
 }) {
   const [query, setQuery] = useState("");
   const [contactStudent, setContactStudent] = useState<Student | null>(null);
+  const [isReordering, startReorder] = useTransition();
 
   const filtered = useMemo(() => {
     const q = normalize(query.trim());
@@ -48,6 +50,14 @@ export function StudentsTable({
             {filtered.length} de {students.length}
           </span>
         )}
+        <button
+          type="button"
+          disabled={isReordering || students.length === 0}
+          onClick={() => startReorder(() => reorderStudents(sectionId))}
+          className="ml-auto shrink-0 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-100 disabled:opacity-50"
+        >
+          {isReordering ? "Reordenando..." : "Reordenar por apellido"}
+        </button>
       </div>
 
       <div className="mt-3 overflow-x-auto rounded-lg border border-zinc-200 bg-white">

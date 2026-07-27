@@ -256,6 +256,19 @@ export async function createStudent(sectionId: string, formData: FormData) {
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
 }
 
+// Reordena/renumera a los estudiantes que ya existen en la sección (por
+// ejemplo, los que quedaron en orden de inserción antes de que esto
+// existiera, o una lista importada). No hace falta agregar un estudiante
+// nuevo para disparar esto.
+export async function reorderStudents(sectionId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reorder_students_by_apellido", {
+    p_section_id: sectionId,
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/secciones/${sectionId}/estudiantes`);
+}
+
 export async function updateStudentContacto(
   sectionId: string,
   studentId: string,
