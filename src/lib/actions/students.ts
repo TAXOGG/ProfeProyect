@@ -83,6 +83,8 @@ function parseCsv(text: string): string[][] {
 
 export type ImportPreview = {
   error?: string;
+  sheets?: string[];
+  sheetName?: string;
   headers?: string[];
   rows?: string[][];
   guessedMapping?: (string | null)[];
@@ -97,7 +99,13 @@ export async function analyzeImportFile(
     return { error: "Selecciona un archivo." };
   }
 
+  // Un Excel con varias hojas (una por sección, ej. "10-1", "10-2") pide
+  // primero elegir cuál corresponde a la sección actual, antes de analizar
+  // columnas. Este campo llega vacío en la primera pasada.
+  const hoja = String(formData.get("hoja") ?? "").trim();
+
   let grid: string[][];
+  let sheetName: string | undefined;
   try {
     if (file.name.toLowerCase().endsWith(".csv")) {
       const text = await file.text();
@@ -106,9 +114,21 @@ export async function analyzeImportFile(
       const buffer = await file.arrayBuffer();
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
-      const worksheet = workbook.worksheets[0];
+      const sheets = workbook.worksheets.filter((ws) => ws.rowCount > 0);
+
+      if (sheets.length === 0) {
+        return { error: "El archivo no tiene hojas con datos." };
+      }
+
+      if (sheets.length > 1 && !hoja) {
+        return { sheets: sheets.map((ws) => ws.name) };
+      }
+
+      const worksheet = hoja ? (sheets.find((ws) => ws.name === hoja) ?? sheets[0]) : sheets[0];
+      sheetName = worksheet.name;
+
       grid = [];
-      worksheet?.eachRow((row) => {
+      worksheet.eachRow((row) => {
         const values = (row.values as unknown[]).slice(1);
         grid.push(values.map((v) => (v == null ? "" : String(v))));
       });
@@ -118,18 +138,18 @@ export async function analyzeImportFile(
   }
 
   if (grid.length < 2) {
-    return { error: "El archivo no tiene filas de datos." };
+    return { error: "La hoja no tiene filas de datos." };
   }
 
   const headers = grid[0];
   const rows = grid.slice(1).filter((r) => r.some((c) => c.trim() !== ""));
   if (rows.length === 0) {
-    return { error: "El archivo no tiene filas de datos." };
+    return { error: "La hoja no tiene filas de datos." };
   }
 
   const guessedMapping = headers.map((h) => IMPORT_HEADER_MAP[normalizeHeader(h)] ?? null);
 
-  return { headers, rows, guessedMapping };
+  return { sheetName, headers, rows, guessedMapping };
 }
 
 export type ImportStudentsResult = {

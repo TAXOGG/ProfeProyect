@@ -22,19 +22,51 @@ const FIELD_OPTIONS = [
 export function StudentImportForm({ sectionId }: { sectionId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [sheetNames, setSheetNames] = useState<string[] | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [mapping, setMapping] = useState<(string | null)[]>([]);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportStudentsResult | null>(null);
 
   function handleAnalyze(formData: FormData) {
+    const file = formData.get("archivo");
+    setSelectedFile(file instanceof File ? file : null);
     setAnalyzeError(null);
     setResult(null);
+    setPreview(null);
+    setSheetNames(null);
+    startTransition(async () => {
+      const res = await analyzeImportFile(null, formData);
+      if (res.error) {
+        setAnalyzeError(res.error);
+        return;
+      }
+      if (res.sheets) {
+        // El archivo tiene varias hojas (ej. una por sección): hay que
+        // elegir cuál corresponde antes de poder mapear columnas.
+        setSheetNames(res.sheets);
+        return;
+      }
+      if (!res.headers) {
+        setAnalyzeError("No se pudo leer el archivo.");
+        return;
+      }
+      setPreview(res);
+      setMapping(res.guessedMapping ?? res.headers.map(() => null));
+    });
+  }
+
+  function handlePickSheet(hoja: string) {
+    if (!selectedFile) return;
+    const formData = new FormData();
+    formData.set("archivo", selectedFile);
+    formData.set("hoja", hoja);
+    setAnalyzeError(null);
     startTransition(async () => {
       const res = await analyzeImportFile(null, formData);
       if (res.error || !res.headers) {
-        setAnalyzeError(res.error ?? "No se pudo leer el archivo.");
-        setPreview(null);
+        setAnalyzeError(res.error ?? "No se pudo leer esa hoja.");
         return;
       }
       setPreview(res);
@@ -50,15 +82,27 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
       if (res.success) {
         setPreview(null);
         setMapping([]);
+        setSheetNames(null);
+        setSelectedFile(null);
         formRef.current?.reset();
       }
     });
+  }
+
+  // Vuelve al listado de hojas sin tener que releer el archivo del disco.
+  function handleBackToSheets() {
+    setPreview(null);
+    setMapping([]);
+    setAnalyzeError(null);
+    setResult(null);
   }
 
   function handleCancel() {
     setPreview(null);
     setMapping([]);
     setAnalyzeError(null);
+    setSheetNames(null);
+    setSelectedFile(null);
     formRef.current?.reset();
   }
 
@@ -69,10 +113,10 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
     <div className="max-w-2xl rounded-lg border border-zinc-200 bg-white p-5">
       <h3 className="flex items-center text-sm font-semibold text-zinc-900">
         Importar estudiantes desde Excel/CSV
-        <HelpTooltip text='Sube tu archivo y luego indica qué columna corresponde a cada dato (Primer Apellido y Nombre son obligatorios). Los estudiantes se suman a la lista actual (no reemplazan a los existentes) y la lista completa queda reordenada alfabéticamente por apellido.' />
+        <HelpTooltip text='Sube tu archivo y luego indica qué columna corresponde a cada dato (Primer Apellido y Nombre son obligatorios). Si el Excel trae varias hojas (una por sección), primero elegís cuál importar aquí. Los estudiantes se suman a la lista actual (no reemplazan a los existentes), quedan en mayúsculas y la lista completa queda reordenada alfabéticamente por apellido.' />
       </h3>
 
-      {!preview && (
+      {!preview && !sheetNames && (
         <form ref={formRef} action={handleAnalyze} className="mt-3 flex flex-wrap items-end gap-3">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-medium text-zinc-600">Archivo (.xlsx o .csv)</label>
@@ -96,9 +140,43 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
 
       {analyzeError && <p className="mt-3 text-sm text-red-600">{analyzeError}</p>}
 
+      {sheetNames && !preview && (
+        <div className="mt-4">
+          <p className="text-sm text-zinc-700">
+            El archivo tiene {sheetNames.length} hojas. Elegí cuál corresponde a esta sección:
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {sheetNames.map((name) => (
+              <button
+                key={name}
+                type="button"
+                disabled={isPending}
+                onClick={() => handlePickSheet(name)}
+                className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:border-teal-600 hover:text-teal-700 disabled:opacity-60"
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={isPending}
+            className="mt-3 text-xs text-zinc-500 underline hover:text-zinc-800"
+          >
+            Elegir otro archivo
+          </button>
+        </div>
+      )}
+
       {preview?.headers && (
         <div className="mt-4">
           <p className="text-xs text-zinc-500">
+            {preview.sheetName && (
+              <>
+                Hoja <strong>{preview.sheetName}</strong> ·{" "}
+              </>
+            )}
             Detectamos {preview.headers.length} columna{preview.headers.length === 1 ? "" : "s"} y{" "}
             {preview.rows?.length ?? 0} fila{preview.rows?.length === 1 ? "" : "s"} de datos. Indica
             qué corresponde cada columna:
@@ -160,7 +238,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
             </p>
           )}
 
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={handleConfirm}
@@ -169,6 +247,16 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
             >
               {isPending ? "Importando..." : "Confirmar importación"}
             </button>
+            {sheetNames && sheetNames.length > 1 && (
+              <button
+                type="button"
+                onClick={handleBackToSheets}
+                disabled={isPending}
+                className="rounded-md px-4 py-1.5 text-sm font-medium text-zinc-600 hover:bg-zinc-100"
+              >
+                ‹ Elegir otra hoja
+              </button>
+            )}
             <button
               type="button"
               onClick={handleCancel}
