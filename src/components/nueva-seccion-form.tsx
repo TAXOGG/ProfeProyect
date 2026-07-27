@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { createSection } from "@/lib/actions/sections";
 import { ASIGNATURAS_MEP, NIVELES_MEP, OTRA_OPCION } from "@/lib/catalogs";
 import { InstitutionSearch } from "@/components/institution-search";
@@ -15,9 +15,10 @@ export function NuevaSeccionForm({
 }) {
   const [asignatura, setAsignatura] = useState("");
   const [nivel, setNivel] = useState("");
+  const [state, formAction, isPending] = useActionState(createSection, null);
 
   return (
-    <form action={createSection} className="mt-6 flex flex-col gap-4">
+    <form action={formAction} className="mt-6 flex flex-col gap-4">
       <InstitutionSearch />
 
       <div>
@@ -144,11 +145,14 @@ export function NuevaSeccionForm({
         valores por defecto y se ajusta luego en Ajustes.
       </p>
 
+      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+
       <button
         type="submit"
-        className="mt-2 w-full rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+        disabled={isPending}
+        className="mt-2 w-full rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
       >
-        Crear sección
+        {isPending ? "Creando..." : "Crear sección"}
       </button>
     </form>
   );

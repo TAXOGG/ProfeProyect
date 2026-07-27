@@ -67,7 +67,12 @@ export async function findOrCreateInstitution(
   return nueva.id;
 }
 
-export async function createSection(formData: FormData) {
+export type CreateSectionState = { error?: string } | null;
+
+export async function createSection(
+  _prevState: CreateSectionState,
+  formData: FormData,
+): Promise<CreateSectionState> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -87,9 +92,16 @@ export async function createSection(formData: FormData) {
   const notaMinima = Number(formData.get("nota_minima") ?? 70);
   const clonarDe = String(formData.get("clonar_de") ?? "").trim();
 
-  if ((!institucionId && !institucionNombre) || !nombre || !nivel || !asignatura || !cicloEscolar) {
-    return;
+  if (!institucionId && !institucionNombre) {
+    return {
+      error:
+        'Falta elegir la institución: hacé clic en una opción de la lista, o en "Agregar institución nueva" si no aparece.',
+    };
   }
+  if (!nombre) return { error: "Falta el nombre de la sección (ej. 10-1)." };
+  if (!nivel) return { error: "Falta seleccionar un nivel." };
+  if (!asignatura) return { error: "Falta seleccionar una asignatura." };
+  if (!cicloEscolar) return { error: "Falta el ciclo escolar." };
 
   const institutionId = institucionId
     ? institucionId

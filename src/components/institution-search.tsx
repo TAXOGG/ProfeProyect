@@ -193,6 +193,11 @@ export function InstitutionSearch() {
           {selected.circuito ? ` · Circuito: ${selected.circuito}` : ""}
           {selected.codigo_presupuestario ? ` · Código: ${selected.codigo_presupuestario}` : ""}
         </p>
+      ) : query.trim().length > 0 ? (
+        <p className="mt-1 text-xs text-amber-600">
+          Todavía no elegiste una institución de la lista. Hacé clic en una opción, o en
+          &ldquo;Agregar institución nueva&rdquo; si no aparece.
+        </p>
       ) : (
         <button
           type="button"
