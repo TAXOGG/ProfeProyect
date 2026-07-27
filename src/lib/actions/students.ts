@@ -276,6 +276,42 @@ export async function createStudent(sectionId: string, formData: FormData) {
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
 }
 
+// Corrige datos de un estudiante ya creado: algo que se cargó mal (a mano o
+// por importación) o que cambió durante el periodo (ej. tipo de apoyo).
+export async function updateStudent(sectionId: string, studentId: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const primerApellido = String(formData.get("primer_apellido") ?? "").trim().toUpperCase();
+  const segundoApellido = String(formData.get("segundo_apellido") ?? "").trim().toUpperCase();
+  const nombre = String(formData.get("nombre") ?? "").trim().toUpperCase();
+  if (!primerApellido || !nombre) {
+    throw new Error("Primer apellido y nombre son obligatorios.");
+  }
+
+  const { error } = await supabase
+    .from("students")
+    .update({
+      primer_apellido: primerApellido,
+      segundo_apellido: segundoApellido || null,
+      nombre,
+      identificacion: String(formData.get("identificacion") ?? "").trim() || null,
+      sexo: String(formData.get("sexo") ?? "").trim() || null,
+      tipo_apoyo: String(formData.get("tipo_apoyo") ?? "No tiene").trim(),
+    })
+    .eq("id", studentId);
+
+  if (error) throw new Error(error.message);
+
+  // El apellido pudo haber cambiado, así que la posición en la lista
+  // también podría necesitar ajustarse.
+  const { error: reorderError } = await supabase.rpc("reorder_students_by_apellido", {
+    p_section_id: sectionId,
+  });
+  if (reorderError) throw new Error(reorderError.message);
+
+  revalidatePath(`/secciones/${sectionId}/estudiantes`);
+}
+
 // Reordena/renumera a los estudiantes que ya existen en la sección (por
 // ejemplo, los que quedaron en orden de inserción antes de que esto
 // existiera, o una lista importada). No hace falta agregar un estudiante

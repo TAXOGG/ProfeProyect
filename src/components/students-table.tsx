@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { StudentRowActions } from "@/components/student-row-actions";
 import { StudentContactModal } from "@/components/student-contact-modal";
+import { StudentEditModal } from "@/components/student-edit-modal";
 import { reorderStudents } from "@/lib/actions/students";
 import type { Student } from "@/lib/types";
 
@@ -22,6 +23,7 @@ export function StudentsTable({
 }) {
   const [query, setQuery] = useState("");
   const [contactStudent, setContactStudent] = useState<Student | null>(null);
+  const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [isReordering, startReorder] = useTransition();
 
   const filtered = useMemo(() => {
@@ -79,7 +81,14 @@ export function StudentsTable({
               <tr key={s.id}>
                 <td className="px-4 py-2 text-zinc-500">{s.numero}</td>
                 <td className="px-4 py-2 font-medium text-zinc-900">
-                  {s.primer_apellido} {s.segundo_apellido} {s.nombre}
+                  <button
+                    type="button"
+                    onClick={() => setEditStudent(s)}
+                    className="text-left hover:underline"
+                    title="Editar estudiante"
+                  >
+                    {s.primer_apellido} {s.segundo_apellido} {s.nombre}
+                  </button>
                 </td>
                 <td className="px-4 py-2 text-zinc-500">{s.identificacion ?? "—"}</td>
                 <td className="px-4 py-2 text-zinc-500">
@@ -130,6 +139,15 @@ export function StudentsTable({
           student={contactStudent}
           open={!!contactStudent}
           onClose={() => setContactStudent(null)}
+        />
+      )}
+
+      {editStudent && (
+        <StudentEditModal
+          sectionId={sectionId}
+          student={editStudent}
+          open={!!editStudent}
+          onClose={() => setEditStudent(null)}
         />
       )}
     </div>
