@@ -27,7 +27,15 @@ export default async function ReportesPage({
             Nota final por periodo y anual, calculada automáticamente a partir de los 5 rubros.
           </p>
         </div>
-        <ExportPdfButton />
+        <div className="no-print flex shrink-0 gap-2">
+          <a
+            href={`/secciones/${sectionId}/exportar`}
+            className="rounded-md border border-zinc-300 bg-white px-4 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          >
+            Exportar a Excel
+          </a>
+          <ExportPdfButton />
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
