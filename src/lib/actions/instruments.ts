@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { InstrumentTipo } from "@/lib/types";
+import type { InstrumentRubroDestino, InstrumentTargetKind, InstrumentTipo } from "@/lib/types";
 
 const TIPOS: InstrumentTipo[] = [
   "rubrica_analitica",
@@ -313,4 +313,277 @@ export async function deleteNivel(nivelId: string) {
   const { error } = await supabase.from("instrument_levels").delete().eq("id", nivelId);
   if (error) throw new Error(error.message);
   if (instrumentId) revalidatePath(`/instrumentos/${instrumentId}`);
+}
+
+async function computeInstrumentTotal(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  instrumentId: string,
+) {
+  const { data: criteria } = await supabase
+    .from("instrument_criteria")
+    .select("id")
+    .eq("instrument_id", instrumentId);
+  const criterioIds = (criteria ?? []).map((c) => c.id as string);
+  if (criterioIds.length === 0) return 0;
+
+  const { data: levels } = await supabase
+    .from("instrument_levels")
+    .select("criterio_id, puntaje")
+    .in("criterio_id", criterioIds);
+
+  let total = 0;
+  for (const cId of criterioIds) {
+    const max = Math.max(
+      0,
+      ...(levels ?? []).filter((l) => l.criterio_id === cId).map((l) => l.puntaje as number),
+    );
+    total += max;
+  }
+  return total;
+}
+
+// Aplica el instrumento a una sección/periodo: crea el ítem destino (nueva
+// Prueba/Tarea/Etapa/Indicador, nombrado igual que el instrumento) en la
+// misma escala que el instrumento, para que el puntaje obtenido se pueda
+// escribir directo sin reescalar (salvo Tareas, que siempre son 0-100).
+export async function applyInstrument(instrumentId: string, formData: FormData) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const sectionId = String(formData.get("section_id") ?? "").trim();
+  const periodId = String(formData.get("period_id") ?? "").trim();
+  const rubroDestino = String(formData.get("rubro_destino") ?? "").trim() as
+    | InstrumentRubroDestino
+    | "";
+  const fecha = String(formData.get("fecha") ?? "").trim() || new Date().toISOString().slice(0, 10);
+
+  if (!sectionId || !periodId) throw new Error("Elegí una sección y un periodo.");
+
+  const { data: instrument } = await supabase
+    .from("instruments")
+    .select("id, nombre, tipo, estado")
+    .eq("id", instrumentId)
+    .single();
+  if (!instrument) throw new Error("No se encontró el instrumento.");
+
+  const generaNota = instrument.tipo !== "registro_anecdotico";
+  if (generaNota && !rubroDestino) throw new Error("Elegí a qué rubro va a ir la nota.");
+
+  let targetKind: InstrumentTargetKind | null = null;
+  let targetId: string | null = null;
+
+  if (generaNota) {
+    const total = await computeInstrumentTotal(supabase, instrumentId);
+    if (total <= 0) {
+      throw new Error(
+        "El instrumento no tiene niveles con puntaje todavía — agregá al menos uno antes de aplicarlo.",
+      );
+    }
+
+    if (rubroDestino === "cotidiano") {
+      const { count } = await supabase
+        .from("cotidiano_indicators")
+        .select("id", { count: "exact", head: true })
+        .eq("period_id", periodId);
+      const { data: item, error } = await supabase
+        .from("cotidiano_indicators")
+        .insert({
+          section_id: sectionId,
+          period_id: periodId,
+          numero: (count ?? 0) + 1,
+          descripcion: instrument.nombre,
+          puntos_max: total,
+        })
+        .select("id")
+        .single();
+      if (error || !item) throw new Error(error?.message ?? "No se pudo crear el indicador.");
+      targetKind = "cotidiano_indicator";
+      targetId = item.id;
+    } else if (rubroDestino === "pruebas") {
+      const { count } = await supabase
+        .from("exams")
+        .select("id", { count: "exact", head: true })
+        .eq("period_id", periodId);
+      const { data: item, error } = await supabase
+        .from("exams")
+        .insert({
+          section_id: sectionId,
+          period_id: periodId,
+          numero: (count ?? 0) + 1,
+          nombre: instrument.nombre,
+          puntos_max: total,
+          porcentaje_relativo: 1,
+        })
+        .select("id")
+        .single();
+      if (error || !item) throw new Error(error?.message ?? "No se pudo crear la prueba.");
+      targetKind = "exam";
+      targetId = item.id;
+    } else if (rubroDestino === "tareas") {
+      const { count } = await supabase
+        .from("homework_items")
+        .select("id", { count: "exact", head: true })
+        .eq("period_id", periodId);
+      const { data: item, error } = await supabase
+        .from("homework_items")
+        .insert({
+          section_id: sectionId,
+          period_id: periodId,
+          numero: (count ?? 0) + 1,
+          descripcion: instrument.nombre,
+        })
+        .select("id")
+        .single();
+      if (error || !item) throw new Error(error?.message ?? "No se pudo crear la tarea.");
+      targetKind = "homework_item";
+      targetId = item.id;
+    } else if (rubroDestino === "proyecto") {
+      const { data: item, error } = await supabase
+        .from("project_stages")
+        .insert({
+          section_id: sectionId,
+          period_id: periodId,
+          nombre: instrument.nombre,
+          puntos_max: total,
+        })
+        .select("id")
+        .single();
+      if (error || !item) throw new Error(error?.message ?? "No se pudo crear la etapa.");
+      targetKind = "project_stage";
+      targetId = item.id;
+    } else {
+      throw new Error("Rubro destino inválido.");
+    }
+  }
+
+  const { data: application, error: appError } = await supabase
+    .from("instrument_applications")
+    .insert({
+      instrument_id: instrumentId,
+      section_id: sectionId,
+      period_id: periodId,
+      rubro_destino: generaNota ? rubroDestino : null,
+      target_kind: targetKind,
+      target_id: targetId,
+      fecha,
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
+  if (appError || !application) {
+    throw new Error(appError?.message ?? "No se pudo crear la aplicación.");
+  }
+
+  if (instrument.estado !== "archivado") {
+    await supabase.from("instruments").update({ estado: "aplicado" }).eq("id", instrumentId);
+  }
+
+  revalidatePath(`/secciones/${sectionId}/instrumentos`);
+  redirect(`/secciones/${sectionId}/instrumentos/${application.id}`);
+}
+
+export type SaveInstrumentResultInput = {
+  criterioScores: Record<string, string>;
+  observacion: string;
+  finalize: boolean;
+};
+
+// Guarda el resultado de un estudiante y, si se finaliza, escribe la nota
+// calculada en la tabla de siempre (exam_scores, homework_scores, etc.),
+// dejando la referencia de vuelta al instrumento vía instrument_results.
+export async function saveInstrumentResult(
+  applicationId: string,
+  studentId: string,
+  input: SaveInstrumentResultInput,
+) {
+  const supabase = await createClient();
+
+  const { data: application } = await supabase
+    .from("instrument_applications")
+    .select("*, instruments ( id, tipo )")
+    .eq("id", applicationId)
+    .single();
+  if (!application) throw new Error("No se encontró la aplicación.");
+
+  const instrumentTipo = (application.instruments as unknown as { tipo: string } | null)?.tipo;
+  const generaNota = instrumentTipo !== "registro_anecdotico";
+
+  let puntajeObtenido: number | null = null;
+  if (generaNota) {
+    const nivelIds = Object.values(input.criterioScores);
+    if (nivelIds.length > 0) {
+      const { data: levels } = await supabase
+        .from("instrument_levels")
+        .select("id, puntaje")
+        .in("id", nivelIds);
+      puntajeObtenido = (levels ?? []).reduce((sum, l) => sum + (l.puntaje as number), 0);
+    } else {
+      puntajeObtenido = 0;
+    }
+  }
+
+  const { error } = await supabase.from("instrument_results").upsert(
+    {
+      application_id: applicationId,
+      student_id: studentId,
+      criterio_scores: input.criterioScores,
+      puntaje_obtenido: puntajeObtenido,
+      observacion: input.observacion || null,
+      estado: input.finalize ? "completado" : "borrador",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "application_id,student_id" },
+  );
+  if (error) throw new Error(error.message);
+
+  if (input.finalize && generaNota && application.target_kind && application.target_id) {
+    const targetId = application.target_id as string;
+    const puntos = puntajeObtenido ?? 0;
+
+    if (application.target_kind === "cotidiano_indicator") {
+      const { error: writeError } = await supabase
+        .from("cotidiano_scores")
+        .upsert(
+          { indicator_id: targetId, student_id: studentId, puntaje: puntos },
+          { onConflict: "indicator_id,student_id" },
+        );
+      if (writeError) throw new Error(writeError.message);
+    } else if (application.target_kind === "exam") {
+      const { error: writeError } = await supabase
+        .from("exam_scores")
+        .upsert(
+          { exam_id: targetId, student_id: studentId, puntos_obtenidos: puntos },
+          { onConflict: "exam_id,student_id" },
+        );
+      if (writeError) throw new Error(writeError.message);
+    } else if (application.target_kind === "project_stage") {
+      const { error: writeError } = await supabase
+        .from("project_scores")
+        .upsert(
+          { stage_id: targetId, student_id: studentId, puntos_obtenidos: puntos },
+          { onConflict: "stage_id,student_id" },
+        );
+      if (writeError) throw new Error(writeError.message);
+    } else if (application.target_kind === "homework_item") {
+      // homework_scores.nota es siempre 0-100, hay que reescalar contra el
+      // puntaje total del instrumento.
+      const total = await computeInstrumentTotal(supabase, application.instrument_id as string);
+      const nota = total > 0 ? Math.min(100, (puntos / total) * 100) : 0;
+      const { error: writeError } = await supabase
+        .from("homework_scores")
+        .upsert(
+          { homework_id: targetId, student_id: studentId, nota },
+          { onConflict: "homework_id,student_id" },
+        );
+      if (writeError) throw new Error(writeError.message);
+    }
+  }
+
+  revalidatePath(`/secciones/${application.section_id}/instrumentos/${applicationId}`);
+  if (application.rubro_destino) {
+    revalidatePath(`/secciones/${application.section_id}/${application.rubro_destino}`);
+  }
 }

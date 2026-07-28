@@ -14,6 +14,7 @@ const MODULES = [
   { slug: "tareas", label: "Tareas" },
   { slug: "proyecto", label: "Proyecto" },
   { slug: "asistencia", label: "Asistencia" },
+  { slug: "instrumentos", label: "Instrumentos" },
   { slug: "reportes", label: "Reportes" },
   { slug: "historial", label: "Historial" },
   { slug: "ajustes", label: "Ajustes" },
