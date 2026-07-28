@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ArchivedSectionRow } from "@/components/archived-section-row";
+import { ArchivedSectionsFilterList } from "@/components/archived-sections-filter-list";
 import type { Section, SectionWithInstitution } from "@/lib/types";
 
 export default async function SeccionesArchivadasPage() {
@@ -32,17 +32,7 @@ export default async function SeccionesArchivadasPage() {
         información. Puedes restaurarlas cuando quieras.
       </p>
 
-      <div className="mt-6 flex flex-col gap-3">
-        {list.map((s) => (
-          <ArchivedSectionRow key={s.id} section={s} />
-        ))}
-
-        {list.length === 0 && (
-          <p className="rounded-lg border border-dashed border-zinc-300 px-5 py-6 text-center text-sm text-zinc-500">
-            No tienes secciones archivadas.
-          </p>
-        )}
-      </div>
+      <ArchivedSectionsFilterList sections={list} />
     </div>
   );
 }

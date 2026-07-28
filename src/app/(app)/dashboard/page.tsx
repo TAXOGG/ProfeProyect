@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveSections } from "@/lib/sections-data";
+import { SectionsFilterList } from "@/components/sections-filter-list";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -32,28 +33,9 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3">
-        {list.map((s) => (
-          <Link
-            key={s.id}
-            href={`/secciones/${s.id}/estudiantes`}
-            className="rounded-lg border border-zinc-200 bg-white px-5 py-4 shadow-sm hover:border-zinc-400"
-          >
-            <p className="font-medium text-zinc-900">
-              {s.asignatura} — {s.nombre}
-            </p>
-            <p className="text-sm text-zinc-500">
-              {s.institutionNombre} · {s.nivel} · Ciclo {s.ciclo_escolar}
-            </p>
-          </Link>
-        ))}
+      <SectionsFilterList sections={list} />
 
-        {list.length === 0 && (
-          <p className="rounded-lg border border-dashed border-zinc-300 px-5 py-6 text-center text-sm text-zinc-500">
-            Aún no tienes secciones registradas.
-          </p>
-        )}
-
+      <div className="mt-3 flex flex-col gap-3">
         <Link
           href="/secciones/nueva"
           className="rounded-lg border border-zinc-300 border-dashed px-5 py-4 text-center text-sm font-medium text-zinc-600 hover:bg-zinc-100"
