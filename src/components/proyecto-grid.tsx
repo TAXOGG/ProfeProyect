@@ -5,6 +5,7 @@ import Link from "next/link";
 import { upsertStageScore } from "@/lib/actions/project";
 import { useThresholdGrid } from "@/lib/use-threshold-grid";
 import { ConfirmModal } from "@/components/confirm-modal";
+import { MobileGradePager } from "@/components/mobile-grade-pager";
 import { db } from "@/lib/offline/db";
 import { enqueueAction, pullProyectoData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
@@ -84,7 +85,23 @@ export function ProyectoGrid({
   const color = moduleColor("proyecto");
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+    <div className="flex flex-col gap-4">
+      <div className="md:hidden">
+        <MobileGradePager
+          students={students}
+          items={stages.map((e) => ({ id: e.id, label: e.nombre, max: e.puntos_max }))}
+          getValue={getValue}
+          onChange={handleChange}
+          onBlur={(itemId, studentId, raw) => {
+            const max = stages.find((e) => e.id === itemId)?.puntos_max ?? 0;
+            handleBlur(itemId, studentId, raw, max);
+          }}
+          isPending={isPending}
+          isSaved={isSaved}
+        />
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
       <table className="w-full text-sm">
         <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
           <tr>
@@ -176,6 +193,7 @@ export function ProyectoGrid({
           )}
         </tbody>
       </table>
+      </div>
 
       <ConfirmModal
         open={!!pending}

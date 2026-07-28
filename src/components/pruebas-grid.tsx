@@ -5,6 +5,7 @@ import Link from "next/link";
 import { upsertExamScore } from "@/lib/actions/exams";
 import { useThresholdGrid } from "@/lib/use-threshold-grid";
 import { ConfirmModal } from "@/components/confirm-modal";
+import { MobileGradePager } from "@/components/mobile-grade-pager";
 import { db } from "@/lib/offline/db";
 import { enqueueAction, pullPruebasData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
@@ -79,7 +80,27 @@ export function PruebasGrid({
   const color = moduleColor("pruebas");
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+    <div className="flex flex-col gap-4">
+      <div className="md:hidden">
+        <MobileGradePager
+          students={students}
+          items={exams.map((e) => ({
+            id: e.id,
+            label: `${e.nombre} (${(e.porcentaje_relativo * 100).toFixed(0)}%)`,
+            max: e.puntos_max,
+          }))}
+          getValue={getValue}
+          onChange={handleChange}
+          onBlur={(itemId, studentId, raw) => {
+            const max = exams.find((e) => e.id === itemId)?.puntos_max ?? 0;
+            handleBlur(itemId, studentId, raw, max);
+          }}
+          isPending={isPending}
+          isSaved={isSaved}
+        />
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
       <table className="w-full text-sm">
         <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
           <tr>
@@ -178,6 +199,7 @@ export function PruebasGrid({
           )}
         </tbody>
       </table>
+      </div>
 
       <ConfirmModal
         open={!!pending}

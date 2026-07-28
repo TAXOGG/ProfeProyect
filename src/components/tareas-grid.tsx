@@ -7,6 +7,7 @@ import { db } from "@/lib/offline/db";
 import { enqueueAction, pullTareasData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
 import { SendRubroReportButton } from "@/components/send-rubro-report-button";
+import { MobileGradePager } from "@/components/mobile-grade-pager";
 import type { HomeworkItem, HomeworkScore, Student } from "@/lib/types";
 
 export function TareasGrid({
@@ -105,7 +106,24 @@ export function TareasGrid({
   const color = moduleColor("tareas");
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+    <div className="flex flex-col gap-4">
+      <div className="md:hidden">
+        <MobileGradePager
+          students={students}
+          items={items.map((h) => ({
+            id: h.id,
+            label: `#${h.numero}${h.descripcion ? ` — ${h.descripcion}` : ""}`,
+            max: 100,
+          }))}
+          getValue={getValue}
+          onChange={handleChange}
+          onBlur={(itemId, studentId, raw) => handleBlur(itemId, studentId, raw)}
+          isPending={isPending}
+          isSaved={isSaved}
+        />
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
       <table className="w-full text-sm">
         <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
           <tr>
@@ -193,6 +211,7 @@ export function TareasGrid({
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

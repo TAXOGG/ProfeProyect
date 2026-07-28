@@ -5,6 +5,7 @@ import Link from "next/link";
 import { upsertPuntaje } from "@/lib/actions/cotidiano";
 import { useThresholdGrid } from "@/lib/use-threshold-grid";
 import { ConfirmModal } from "@/components/confirm-modal";
+import { MobileGradePager } from "@/components/mobile-grade-pager";
 import { db } from "@/lib/offline/db";
 import { enqueueAction, pullCotidianoData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
@@ -93,7 +94,27 @@ export function CotidianoGrid({
   const color = moduleColor("cotidiano");
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+    <div className="flex flex-col gap-4">
+      <div className="md:hidden">
+        <MobileGradePager
+          students={students}
+          items={indicators.map((i) => ({
+            id: i.id,
+            label: `#${i.numero} — ${i.descripcion}`,
+            max: i.puntos_max,
+          }))}
+          getValue={getValue}
+          onChange={handleChange}
+          onBlur={(itemId, studentId, raw) => {
+            const max = indicators.find((i) => i.id === itemId)?.puntos_max ?? 0;
+            handleBlur(itemId, studentId, raw, max);
+          }}
+          isPending={isPending}
+          isSaved={isSaved}
+        />
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white md:block">
       <table className="w-full text-sm">
         <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
           <tr>
@@ -189,6 +210,7 @@ export function CotidianoGrid({
           )}
         </tbody>
       </table>
+      </div>
 
       <ConfirmModal
         open={!!pending}
