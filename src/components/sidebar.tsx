@@ -145,6 +145,18 @@ export function Sidebar({
             Inicio
           </Link>
 
+          <Link
+            href="/instrumentos"
+            prefetch={false}
+            className={`block rounded-md px-3 py-2 text-sm ${
+              pathname.startsWith("/instrumentos")
+                ? "bg-teal-700 text-white"
+                : "text-zinc-700 hover:bg-zinc-100"
+            }`}
+          >
+            Instrumentos
+          </Link>
+
           {isAdmin && (
             <>
               <p className="px-3 pt-4 pb-1 text-xs font-medium uppercase tracking-wide text-zinc-400">

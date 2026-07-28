@@ -34,6 +34,74 @@ export type RubricConfig = {
 
 export type SectionWithInstitution = Section & { institutionNombre: string };
 
+export type InstrumentTipo =
+  | "rubrica_analitica"
+  | "rubrica_holistica"
+  | "lista_cotejo"
+  | "escala_valoracion"
+  | "registro_anecdotico";
+
+export type InstrumentEstado = "borrador" | "activo" | "aplicado" | "archivado";
+
+export type Instrument = {
+  id: string;
+  owner_id: string;
+  nombre: string;
+  descripcion: string | null;
+  tipo: InstrumentTipo;
+  materia: string | null;
+  nivel: string | null;
+  instrucciones: string | null;
+  estado: InstrumentEstado;
+  created_at: string;
+  updated_at: string;
+};
+
+export type InstrumentCriterio = {
+  id: string;
+  instrument_id: string;
+  orden: number;
+  descripcion: string;
+};
+
+export type InstrumentNivel = {
+  id: string;
+  criterio_id: string;
+  orden: number;
+  nombre: string;
+  descripcion: string | null;
+  puntaje: number;
+};
+
+export type InstrumentRubroDestino = "cotidiano" | "pruebas" | "tareas" | "proyecto";
+export type InstrumentTargetKind = "cotidiano_indicator" | "exam" | "homework_item" | "project_stage";
+
+export type InstrumentApplication = {
+  id: string;
+  instrument_id: string;
+  section_id: string;
+  period_id: string;
+  rubro_destino: InstrumentRubroDestino | null;
+  target_kind: InstrumentTargetKind | null;
+  target_id: string | null;
+  fecha: string;
+  estado: "pendiente" | "completada";
+  created_by: string | null;
+  created_at: string;
+};
+
+export type InstrumentResult = {
+  id: string;
+  application_id: string;
+  student_id: string;
+  criterio_scores: Record<string, string>;
+  puntaje_obtenido: number | null;
+  observacion: string | null;
+  estado: "borrador" | "completado";
+  created_at: string;
+  updated_at: string;
+};
+
 export type Period = {
   id: string;
   section_id: string;
