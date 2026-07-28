@@ -84,6 +84,7 @@ export async function uploadStudentPhoto(
 
   const categoria = String(formData.get("categoria") ?? "").trim() || null;
   const nota = String(formData.get("nota") ?? "").trim() || null;
+  const supportRecordId = String(formData.get("support_record_id") ?? "").trim() || null;
   const ext = EXT_BY_TYPE[realType] ?? "jpg";
   const path = `${user.id}/${studentId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
@@ -98,6 +99,7 @@ export async function uploadStudentPhoto(
     categoria,
     nota,
     storage_path: path,
+    support_record_id: supportRecordId,
   });
   if (insertError) {
     await supabase.storage.from(BUCKET).remove([path]);
@@ -105,6 +107,7 @@ export async function uploadStudentPhoto(
   }
 
   revalidatePath(`/secciones/${sectionId}/estudiantes/${studentId}/fotos`);
+  if (supportRecordId) revalidatePath(`/secciones/${sectionId}/apoyos/${supportRecordId}`);
   return { success: true };
 }
 

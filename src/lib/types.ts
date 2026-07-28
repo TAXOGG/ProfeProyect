@@ -220,5 +220,35 @@ export type StudentPhoto = {
   categoria: string | null;
   nota: string | null;
   storage_path: string;
+  support_record_id: string | null;
+  created_at: string;
+};
+
+export type SupportRecord = {
+  id: string;
+  student_id: string;
+  section_id: string;
+  period_id: string | null;
+  fecha: string;
+  tipo_apoyo: string;
+  descripcion: string;
+  motivo: string | null;
+  contexto: string | null;
+  resultado_observado: string | null;
+  seguimiento_requerido: boolean;
+  proximo_seguimiento: string | null;
+  responsable: string | null;
+  estado: "activo" | "archivado";
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SupportRecordFollowup = {
+  id: string;
+  support_record_id: string;
+  fecha: string;
+  nota: string;
+  created_by: string | null;
   created_at: string;
 };

@@ -8,9 +8,11 @@ import { HelpTooltip } from "@/components/help-tooltip";
 export function UploadPhotoForm({
   sectionId,
   studentId,
+  supportRecordId,
 }: {
   sectionId: string;
   studentId: string;
+  supportRecordId?: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -32,6 +34,7 @@ export function UploadPhotoForm({
         <HelpTooltip text="En el teléfono, al tocar 'Foto' se abre la cámara directamente. Solo se aceptan imágenes (JPG, PNG, HEIC, WEBP) de hasta 10MB." />
       </h3>
       <form ref={formRef} action={handleSubmit} className="mt-3 flex flex-col gap-3">
+        {supportRecordId && <input type="hidden" name="support_record_id" value={supportRecordId} />}
         <div>
           <label className="block text-xs font-medium text-zinc-600">Foto</label>
           <input
