@@ -1,0 +1,116 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { updateUserProfile } from "@/lib/actions/admin-users";
+import { InstitutionSearch } from "@/components/institution-search";
+import type { AdminUserRow } from "@/components/admin-users-table";
+
+export function AdminUserEditModal({
+  user,
+  open,
+  onClose,
+}: {
+  user: AdminUserRow;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="admin-user-edit-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-5 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="admin-user-edit-modal-title" className="text-sm font-semibold text-zinc-900">
+          Editar usuario
+        </h2>
+        <p className="mt-1 text-sm text-zinc-500">{user.email ?? "Sin correo"}</p>
+
+        <form
+          className="mt-4 flex flex-col gap-3"
+          action={(formData) => {
+            setError(null);
+            const nombre = String(formData.get("nombre") ?? "").trim();
+            if (!nombre) {
+              setError("Falta el nombre.");
+              return;
+            }
+            startTransition(async () => {
+              try {
+                await updateUserProfile(user.id, formData);
+                onClose();
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "No se pudo guardar.");
+              }
+            });
+          }}
+        >
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">Nombre completo</label>
+            <input
+              name="nombre"
+              required
+              defaultValue={user.fullName ?? ""}
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">Rol</label>
+            <select
+              name="role"
+              defaultValue={user.role ?? "docente"}
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="docente">Docente</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <InstitutionSearch
+            initialInstitutionId={user.institutionId ?? undefined}
+            initialInstitutionName={user.institutionName ?? undefined}
+          />
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div className="mt-1 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-50"
+            >
+              {isPending ? "Guardando..." : "Guardar"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

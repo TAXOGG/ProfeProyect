@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -99,4 +100,49 @@ export async function createTeacherAccount(formData: FormData) {
   });
 
   redirect("/admin/nuevo-usuario?creado=1");
+}
+
+export async function updateUserProfile(userId: string, formData: FormData) {
+  await requireAdmin();
+
+  const nombre = String(formData.get("nombre") ?? "").trim();
+  const rol = String(formData.get("role") ?? "").trim();
+  const institucionId = String(formData.get("institucion_id") ?? "").trim();
+  const institucionNombre = String(formData.get("institucion_nombre") ?? "").trim();
+  const direccionRegional = String(formData.get("direccion_regional") ?? "").trim();
+  const circuito = String(formData.get("circuito") ?? "").trim();
+  const provincia = String(formData.get("provincia") ?? "").trim();
+  const canton = String(formData.get("canton") ?? "").trim();
+
+  if (!nombre) throw new Error("Falta el nombre.");
+  if (rol !== "admin" && rol !== "docente") throw new Error("Rol inválido.");
+  if (!institucionId && !institucionNombre) {
+    throw new Error("Falta elegir la institución.");
+  }
+
+  // La institución se busca/crea con la sesión normal del admin, igual que
+  // en la creación de cuentas; solo el UPDATE sobre el perfil de OTRO
+  // usuario necesita el cliente de service role (RLS solo deja a cada quien
+  // actualizar su propio perfil).
+  const supabase = await createClient();
+  const institutionId = institucionId
+    ? institucionId
+    : await findOrCreateInstitution(
+        supabase,
+        institucionNombre,
+        direccionRegional,
+        circuito,
+        provincia,
+        canton,
+      );
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient
+    .from("profiles")
+    .update({ full_name: nombre, role: rol, institution_id: institutionId })
+    .eq("id", userId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/usuarios");
 }

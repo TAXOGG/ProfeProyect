@@ -4,11 +4,29 @@ import { useRef, useState, useTransition } from "react";
 import { searchInstitutions, type InstitutionSearchResult } from "@/lib/actions/institutions";
 import { HelpTooltip } from "@/components/help-tooltip";
 
-export function InstitutionSearch() {
-  const [query, setQuery] = useState("");
+export function InstitutionSearch({
+  initialInstitutionId,
+  initialInstitutionName,
+}: {
+  initialInstitutionId?: string;
+  initialInstitutionName?: string;
+} = {}) {
+  const [query, setQuery] = useState(initialInstitutionName ?? "");
   const [results, setResults] = useState<InstitutionSearchResult[]>([]);
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<InstitutionSearchResult | null>(null);
+  const [selected, setSelected] = useState<InstitutionSearchResult | null>(
+    initialInstitutionId && initialInstitutionName
+      ? {
+          id: initialInstitutionId,
+          nombre: initialInstitutionName,
+          canton: null,
+          provincia: null,
+          direccion_regional: null,
+          circuito: null,
+          codigo_presupuestario: null,
+        }
+      : null,
+  );
   const [creatingNew, setCreatingNew] = useState(false);
   const [nombrePrefill, setNombrePrefill] = useState("");
   const [isPending, startTransition] = useTransition();
