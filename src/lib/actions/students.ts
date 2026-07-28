@@ -30,6 +30,12 @@ function normalizeHeader(h: string) {
   return h.toString().trim().toLowerCase().normalize("NFD").replace(DIACRITICS_RE, "");
 }
 
+// Clave de comparación para detectar duplicados: mismas letras sin importar
+// acentos, mayúsculas o espacios extra.
+function normalizeCompareKey(s: string) {
+  return s.trim().toUpperCase().normalize("NFD").replace(DIACRITICS_RE, "").replace(/\s+/g, " ");
+}
+
 // "M" ya no significa Masculino: el código vigente es H(Hombre)/M(Mujer).
 // "F" (Femenino) se sigue aceptando en archivos importados como sinónimo de Mujer.
 function parseSexo(raw: string | undefined): string | null {
@@ -156,13 +162,19 @@ export type ImportStudentsResult = {
   error?: string;
   success?: boolean;
   imported?: number;
+  updated?: number;
   skipped?: number;
+  duplicates?: number;
+  skippedRows?: { fila: number; motivo: string }[];
 };
+
+export type DuplicateMode = "omitir" | "actualizar" | "nuevo";
 
 export async function importStudentsFromGrid(
   sectionId: string,
   rows: string[][],
   mapping: (string | null)[],
+  duplicateMode?: DuplicateMode,
 ): Promise<ImportStudentsResult> {
   const supabase = await createClient();
 
@@ -170,55 +182,133 @@ export async function importStudentsFromGrid(
     return { error: 'Debes asignar al menos las columnas "Primer Apellido" y "Nombre".' };
   }
 
-  const { data: existing } = await supabase
+  const { data: existingStudents } = await supabase
     .from("students")
-    .select("numero")
-    .eq("section_id", sectionId)
-    .order("numero", { ascending: false })
-    .limit(1);
-  let nextNumero = (existing?.[0]?.numero ?? 0) + 1;
+    .select("id, primer_apellido, segundo_apellido, nombre, identificacion, numero")
+    .eq("section_id", sectionId);
 
-  const toInsert: Record<string, unknown>[] = [];
-  let skipped = 0;
+  // Un estudiante ya cargado se reconoce por identificación igual, o por
+  // nombre completo igual si no hay identificación en alguno de los dos.
+  const existingByIdent = new Map<string, string>();
+  const existingByName = new Map<string, string>();
+  for (const s of existingStudents ?? []) {
+    if (s.identificacion) existingByIdent.set(normalizeCompareKey(s.identificacion), s.id);
+    existingByName.set(
+      normalizeCompareKey(`${s.primer_apellido} ${s.segundo_apellido ?? ""} ${s.nombre}`),
+      s.id,
+    );
+  }
+  let nextNumero = (existingStudents ?? []).reduce((max, s) => Math.max(max, s.numero), 0) + 1;
 
-  for (const dataRow of rows) {
+  type ParsedRow = {
+    primerApellido: string;
+    segundoApellido: string | null;
+    nombre: string;
+    identificacion: string | null;
+    sexo: string | null;
+    tipoApoyo: string;
+    duplicateOf: string | null;
+  };
+
+  const parsedRows: ParsedRow[] = [];
+  const skippedRows: { fila: number; motivo: string }[] = [];
+
+  rows.forEach((dataRow, i) => {
     const mapped: Record<string, string> = {};
-    mapping.forEach((field, i) => {
-      if (field) mapped[field] = (dataRow[i] ?? "").toString().trim();
+    mapping.forEach((field, ci) => {
+      if (field) mapped[field] = (dataRow[ci] ?? "").toString().trim();
     });
     if (!mapped.primer_apellido || !mapped.nombre) {
-      skipped++;
-      continue;
+      skippedRows.push({ fila: i + 2, motivo: "Falta primer apellido o nombre" });
+      return;
     }
-    const sexo = parseSexo(mapped.sexo);
-    toInsert.push({
-      section_id: sectionId,
-      numero: nextNumero++,
-      primer_apellido: mapped.primer_apellido.toUpperCase(),
-      segundo_apellido: mapped.segundo_apellido ? mapped.segundo_apellido.toUpperCase() : null,
-      nombre: mapped.nombre.toUpperCase(),
-      identificacion: mapped.identificacion || null,
-      sexo,
-      tipo_apoyo: mapped.tipo_apoyo || "No tiene",
+
+    const primerApellido = mapped.primer_apellido.toUpperCase();
+    const segundoApellido = mapped.segundo_apellido ? mapped.segundo_apellido.toUpperCase() : null;
+    const nombre = mapped.nombre.toUpperCase();
+    const identificacion = mapped.identificacion || null;
+
+    const identKey = identificacion ? normalizeCompareKey(identificacion) : null;
+    const nameKey = normalizeCompareKey(`${primerApellido} ${segundoApellido ?? ""} ${nombre}`);
+    const duplicateOf = (identKey && existingByIdent.get(identKey)) || existingByName.get(nameKey) || null;
+
+    parsedRows.push({
+      primerApellido,
+      segundoApellido,
+      nombre,
+      identificacion,
+      sexo: parseSexo(mapped.sexo),
+      tipoApoyo: mapped.tipo_apoyo || "No tiene",
+      duplicateOf,
     });
-  }
-
-  if (toInsert.length === 0) {
-    return { error: "Ninguna fila tenía Primer Apellido y Nombre completos." };
-  }
-
-  const { error } = await supabase.from("students").insert(toInsert);
-  if (error) return { error: error.message };
-
-  // La lista siempre debe quedar ordenada por apellido, venga la data de un
-  // alta manual o de un archivo importado.
-  const { error: reorderError } = await supabase.rpc("reorder_students_by_apellido", {
-    p_section_id: sectionId,
   });
-  if (reorderError) return { error: reorderError.message };
+
+  if (parsedRows.length === 0) {
+    return { error: "Ninguna fila tenía Primer Apellido y Nombre completos.", skippedRows };
+  }
+
+  const duplicateCount = parsedRows.filter((r) => r.duplicateOf).length;
+  if (duplicateCount > 0 && !duplicateMode) {
+    // Todavía no se decidió qué hacer con los duplicados: no se inserta ni
+    // actualiza nada; el cliente muestra la decisión y reintenta con el modo
+    // elegido.
+    return { duplicates: duplicateCount };
+  }
+
+  const toInsert: Record<string, unknown>[] = [];
+  const toUpdate: { id: string; data: Record<string, unknown> }[] = [];
+  let skippedDuplicates = 0;
+
+  for (const r of parsedRows) {
+    const data = {
+      primer_apellido: r.primerApellido,
+      segundo_apellido: r.segundoApellido,
+      nombre: r.nombre,
+      identificacion: r.identificacion,
+      sexo: r.sexo,
+      tipo_apoyo: r.tipoApoyo,
+    };
+    if (r.duplicateOf) {
+      if (duplicateMode === "omitir") {
+        skippedDuplicates++;
+        continue;
+      }
+      if (duplicateMode === "actualizar") {
+        toUpdate.push({ id: r.duplicateOf, data });
+        continue;
+      }
+      // duplicateMode === "nuevo": cae al alta normal de abajo.
+    }
+    toInsert.push({ section_id: sectionId, numero: nextNumero++, ...data });
+  }
+
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from("students").insert(toInsert);
+    if (error) return { error: error.message };
+  }
+
+  for (const u of toUpdate) {
+    const { error } = await supabase.from("students").update(u.data).eq("id", u.id);
+    if (error) return { error: error.message };
+  }
+
+  if (toInsert.length > 0 || toUpdate.length > 0) {
+    // La lista siempre debe quedar ordenada por apellido, venga la data de
+    // un alta manual o de un archivo importado.
+    const { error: reorderError } = await supabase.rpc("reorder_students_by_apellido", {
+      p_section_id: sectionId,
+    });
+    if (reorderError) return { error: reorderError.message };
+  }
 
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
-  return { success: true, imported: toInsert.length, skipped };
+  return {
+    success: true,
+    imported: toInsert.length,
+    updated: toUpdate.length,
+    skipped: skippedRows.length + skippedDuplicates,
+    skippedRows: skippedRows.length > 0 ? skippedRows : undefined,
+  };
 }
 
 async function maxStudentNumero(

@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import {
   analyzeImportFile,
   importStudentsFromGrid,
+  type DuplicateMode,
   type ImportPreview,
   type ImportStudentsResult,
 } from "@/lib/actions/students";
@@ -19,6 +20,20 @@ const FIELD_OPTIONS = [
   { value: "tipo_apoyo", label: "Tipo de Apoyo" },
 ];
 
+function downloadSkippedRowsCsv(skippedRows: { fila: number; motivo: string }[]) {
+  const header = "Fila,Motivo\n";
+  const body = skippedRows
+    .map((r) => `${r.fila},"${r.motivo.replace(/"/g, '""')}"`)
+    .join("\n");
+  const blob = new Blob([`${header}${body}`], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "errores-importacion.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function StudentImportForm({ sectionId }: { sectionId: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -27,6 +42,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [mapping, setMapping] = useState<(string | null)[]>([]);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [duplicateCount, setDuplicateCount] = useState<number | null>(null);
   const [result, setResult] = useState<ImportStudentsResult | null>(null);
 
   function handleAnalyze(formData: FormData) {
@@ -36,6 +52,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
     setResult(null);
     setPreview(null);
     setSheetNames(null);
+    setDuplicateCount(null);
     startTransition(async () => {
       const res = await analyzeImportFile(null, formData);
       if (res.error) {
@@ -74,10 +91,16 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
     });
   }
 
-  function handleConfirm() {
+  function runImport(duplicateMode?: DuplicateMode) {
     if (!preview?.rows) return;
     startTransition(async () => {
-      const res = await importStudentsFromGrid(sectionId, preview.rows!, mapping);
+      const res = await importStudentsFromGrid(sectionId, preview.rows!, mapping, duplicateMode);
+      if (res.duplicates) {
+        // Todavía no se decidió qué hacer con los duplicados detectados.
+        setDuplicateCount(res.duplicates);
+        return;
+      }
+      setDuplicateCount(null);
       setResult(res);
       if (res.success) {
         setPreview(null);
@@ -95,6 +118,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
     setMapping([]);
     setAnalyzeError(null);
     setResult(null);
+    setDuplicateCount(null);
   }
 
   function handleCancel() {
@@ -103,6 +127,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
     setAnalyzeError(null);
     setSheetNames(null);
     setSelectedFile(null);
+    setDuplicateCount(null);
     formRef.current?.reset();
   }
 
@@ -113,7 +138,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
     <div className="max-w-2xl rounded-lg border border-zinc-200 bg-white p-5">
       <h3 className="flex items-center text-sm font-semibold text-zinc-900">
         Importar estudiantes desde Excel/CSV
-        <HelpTooltip text='Sube tu archivo y luego indica qué columna corresponde a cada dato (Primer Apellido y Nombre son obligatorios). Si el Excel trae varias hojas (una por sección), primero elegís cuál importar aquí. Los estudiantes se suman a la lista actual (no reemplazan a los existentes), quedan en mayúsculas y la lista completa queda reordenada alfabéticamente por apellido.' />
+        <HelpTooltip text='Sube tu archivo y luego indica qué columna corresponde a cada dato (Primer Apellido y Nombre son obligatorios). Si el Excel trae varias hojas (una por sección), primero elegís cuál importar aquí. Los estudiantes nuevos quedan en mayúsculas y la lista completa queda reordenada alfabéticamente por apellido. Si alguna fila coincide con un estudiante que ya existe (misma identificación o mismo nombre), te preguntamos qué hacer antes de importar.' />
       </h3>
 
       {!preview && !sheetNames && (
@@ -169,7 +194,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
         </div>
       )}
 
-      {preview?.headers && (
+      {preview?.headers && duplicateCount === null && (
         <div className="mt-4">
           <p className="text-xs text-zinc-500">
             {preview.sheetName && (
@@ -241,7 +266,7 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={handleConfirm}
+              onClick={() => runImport()}
               disabled={isPending || !hasRequired}
               className="rounded-md bg-teal-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
             >
@@ -269,14 +294,73 @@ export function StudentImportForm({ sectionId }: { sectionId: string }) {
         </div>
       )}
 
+      {duplicateCount !== null && (
+        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-800">
+            Encontramos {duplicateCount} estudiante{duplicateCount === 1 ? "" : "s"} en el archivo
+            que ya podría{duplicateCount === 1 ? "" : "n"} estar en esta sección (misma
+            identificación o mismo nombre completo). ¿Qué querés hacer con esas filas?
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => runImport("omitir")}
+              className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+            >
+              Omitir duplicados
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => runImport("actualizar")}
+              className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+            >
+              Actualizar sus datos
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => runImport("nuevo")}
+              className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-60"
+            >
+              Importar como nuevos de todas formas
+            </button>
+          </div>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => setDuplicateCount(null)}
+            className="mt-2 text-xs text-zinc-500 underline hover:text-zinc-800"
+          >
+            Cancelar y revisar el mapeo de columnas
+          </button>
+        </div>
+      )}
+
       {result?.error && <p className="mt-3 text-sm text-red-600">{result.error}</p>}
       {result?.success && (
-        <p className="mt-3 text-sm text-emerald-600">
-          Se importaron {result.imported} estudiante{result.imported === 1 ? "" : "s"}.
-          {result.skipped
-            ? ` Se omitieron ${result.skipped} fila${result.skipped === 1 ? "" : "s"} sin Primer Apellido o Nombre.`
-            : ""}
-        </p>
+        <div className="mt-3 text-sm text-emerald-600">
+          <p>
+            Se importaron {result.imported} estudiante{result.imported === 1 ? "" : "s"}
+            {result.updated
+              ? ` y se actualizaron ${result.updated} ya existente${result.updated === 1 ? "" : "s"}`
+              : ""}
+            .
+            {result.skipped
+              ? ` Se omitieron ${result.skipped} fila${result.skipped === 1 ? "" : "s"}.`
+              : ""}
+          </p>
+          {result.skippedRows && (
+            <button
+              type="button"
+              onClick={() => downloadSkippedRowsCsv(result.skippedRows!)}
+              className="mt-1 text-xs font-medium text-teal-700 underline hover:text-teal-800"
+            >
+              Descargar detalle de filas omitidas (CSV)
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
