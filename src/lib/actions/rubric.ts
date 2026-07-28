@@ -97,3 +97,39 @@ export async function updatePeriodWeights(sectionId: string, formData: FormData)
 
   revalidatePath(`/secciones/${sectionId}/ajustes`);
 }
+
+// Bloquea nuevos cambios en notas/asistencia de este periodo (lo hacen
+// cumplir triggers en la base, no solo la UI). Consultar y exportar sigue
+// funcionando igual.
+export async function closePeriod(sectionId: string, periodId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase
+    .from("periods")
+    .update({
+      estado: "cerrado",
+      cerrado_at: new Date().toISOString(),
+      cerrado_por: user?.id ?? null,
+    })
+    .eq("id", periodId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/secciones/${sectionId}/ajustes`);
+}
+
+export async function reopenPeriod(sectionId: string, periodId: string, formData: FormData) {
+  const supabase = await createClient();
+  const razon = String(formData.get("razon") ?? "").trim();
+  if (!razon) throw new Error("Indicá el motivo de la reapertura.");
+
+  const { error } = await supabase
+    .from("periods")
+    .update({ estado: "reabierto", razon_reapertura: razon })
+    .eq("id", periodId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath(`/secciones/${sectionId}/ajustes`);
+}

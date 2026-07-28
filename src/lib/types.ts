@@ -40,6 +40,10 @@ export type Period = {
   numero: number;
   nombre: string;
   porcentaje: number;
+  estado: "borrador" | "activo" | "cerrado" | "reabierto";
+  cerrado_at: string | null;
+  cerrado_por: string | null;
+  razon_reapertura: string | null;
 };
 
 export type CotidianoIndicator = {

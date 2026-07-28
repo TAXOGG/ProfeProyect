@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AjustesForm } from "@/components/ajustes-form";
+import { PeriodStateCard } from "@/components/period-state-card";
 import { ArchiveSectionCard } from "@/components/archive-section-card";
 import { moduleColor } from "@/lib/module-colors";
 import type { RubricConfig, Period } from "@/lib/types";
@@ -20,6 +21,20 @@ export default async function AjustesPage({
 
   if (!section || !rubric) return null;
 
+  const periodList = (periods as Period[]) ?? [];
+  const cerradoPorIds = [
+    ...new Set(periodList.map((p) => p.cerrado_por).filter((v): v is string => !!v)),
+  ];
+  const { data: profiles } =
+    cerradoPorIds.length > 0
+      ? await supabase.from("profiles").select("id, full_name").in("id", cerradoPorIds)
+      : { data: [] as { id: string; full_name: string | null }[] };
+  const nameByUserId = new Map((profiles ?? []).map((p) => [p.id, p.full_name]));
+  const cerradoPorNombre: Record<string, string> = {};
+  for (const p of periodList) {
+    if (p.cerrado_por) cerradoPorNombre[p.id] = nameByUserId.get(p.cerrado_por) ?? "un docente";
+  }
+
   const color = moduleColor("ajustes");
 
   return (
@@ -31,12 +46,18 @@ export default async function AjustesPage({
         </p>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-8">
         <AjustesForm
           sectionId={sectionId}
           notaMinima={section.nota_minima}
           rubric={rubric as RubricConfig}
-          periods={(periods as Period[]) ?? []}
+          periods={periodList}
+        />
+
+        <PeriodStateCard
+          sectionId={sectionId}
+          periods={periodList}
+          cerradoPorNombre={cerradoPorNombre}
         />
       </div>
 
