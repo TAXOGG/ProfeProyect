@@ -244,6 +244,18 @@ export type SupportRecord = {
   updated_at: string;
 };
 
+export type ObservationTemplate = {
+  id: string;
+  owner_id: string;
+  categoria: string | null;
+  materia: string | null;
+  nivel: string | null;
+  texto: string;
+  favorito: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type SupportRecordFollowup = {
   id: string;
   support_record_id: string;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { InstrumentGradingPager } from "@/components/instrument-grading-pager";
 import { TIPO_LABEL } from "@/lib/instrument-labels";
 import type {
@@ -8,6 +9,7 @@ import type {
   InstrumentNivel,
   InstrumentResult,
   InstrumentTipo,
+  ObservationTemplate,
   Student,
 } from "@/lib/types";
 
@@ -34,22 +36,32 @@ export default async function AplicacionPage({
   }
 
   const instrument = application.instruments as unknown as Instrument;
+  const user = await getCurrentUser();
 
-  const [{ data: criteria }, { data: students }, { data: results }] = await Promise.all([
-    supabase
-      .from("instrument_criteria")
-      .select("*")
-      .eq("instrument_id", instrument.id)
-      .order("orden"),
-    supabase
-      .from("students")
-      .select("*")
-      .eq("section_id", sectionId)
-      .eq("estado", "activo")
-      .is("deleted_at", null)
-      .order("numero"),
-    supabase.from("instrument_results").select("*").eq("application_id", applicationId),
-  ]);
+  const [{ data: criteria }, { data: students }, { data: results }, { data: section }, { data: period }, { data: observations }] =
+    await Promise.all([
+      supabase
+        .from("instrument_criteria")
+        .select("*")
+        .eq("instrument_id", instrument.id)
+        .order("orden"),
+      supabase
+        .from("students")
+        .select("*")
+        .eq("section_id", sectionId)
+        .eq("estado", "activo")
+        .is("deleted_at", null)
+        .order("numero"),
+      supabase.from("instrument_results").select("*").eq("application_id", applicationId),
+      supabase.from("sections").select("nombre, asignatura").eq("id", sectionId).single(),
+      supabase.from("periods").select("nombre").eq("id", application.period_id).single(),
+      user
+        ? supabase.from("observation_templates").select("*").eq("owner_id", user.id).order("favorito", { ascending: false })
+        : Promise.resolve({ data: [] as ObservationTemplate[] }),
+    ]);
+
+  const sec = section as { nombre: string; asignatura: string } | null;
+  const per = period as { nombre: string } | null;
 
   const criteriaList = (criteria as InstrumentCriterio[]) ?? [];
   const criteriaIds = criteriaList.map((c) => c.id);
@@ -80,6 +92,12 @@ export default async function AplicacionPage({
         levels={(levels as InstrumentNivel[]) ?? []}
         students={(students as Student[]) ?? []}
         initialResults={(results as InstrumentResult[]) ?? []}
+        observations={(observations as ObservationTemplate[]) ?? []}
+        observationContext={{
+          grupo: sec?.nombre,
+          materia: instrument.materia ?? sec?.asignatura,
+          periodo: per?.nombre,
+        }}
       />
     </div>
   );

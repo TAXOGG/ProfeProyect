@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   updateSupportRecord,
   duplicateSupportRecord,
   setSupportRecordEstado,
 } from "@/lib/actions/support-records";
 import { TIPOS_APOYO_SUGERIDOS } from "@/lib/support-types";
-import type { SupportRecord } from "@/lib/types";
+import { ObservationPicker } from "@/components/observation-picker";
+import type { ObservationContext } from "@/lib/observation-variables";
+import type { ObservationTemplate, SupportRecord } from "@/lib/types";
 
 function isRedirectError(error: unknown): boolean {
   return (
@@ -22,13 +24,18 @@ function isRedirectError(error: unknown): boolean {
 export function SupportRecordEditForm({
   sectionId,
   record,
+  observations,
+  observationContext,
 }: {
   sectionId: string;
   record: SupportRecord;
+  observations: ObservationTemplate[];
+  observationContext: ObservationContext;
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const resultadoRef = useRef<HTMLTextAreaElement>(null);
 
   function run(action: () => Promise<void>) {
     setError(null);
@@ -101,8 +108,20 @@ export function SupportRecordEditForm({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-zinc-600">Resultado observado</label>
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-medium text-zinc-600">Resultado observado</label>
+            <ObservationPicker
+              observations={observations}
+              context={observationContext}
+              onInsert={(text) => {
+                const el = resultadoRef.current;
+                if (!el) return;
+                el.value = el.value ? `${el.value} ${text}` : text;
+              }}
+            />
+          </div>
           <textarea
+            ref={resultadoRef}
             name="resultado_observado"
             rows={2}
             defaultValue={record.resultado_observado ?? ""}

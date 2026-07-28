@@ -1,10 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
 import { SupportRecordEditForm } from "@/components/support-record-edit-form";
 import { SupportRecordFollowups } from "@/components/support-record-followups";
 import { UploadPhotoForm } from "@/components/upload-photo-form";
 import { PhotoGallery } from "@/components/photo-gallery";
-import type { Student, StudentPhoto, SupportRecord, SupportRecordFollowup } from "@/lib/types";
+import type {
+  ObservationTemplate,
+  Student,
+  StudentPhoto,
+  SupportRecord,
+  SupportRecordFollowup,
+} from "@/lib/types";
 
 const BUCKET = "student-photos";
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
@@ -31,19 +38,29 @@ export default async function ApoyoDetallePage({
     );
   }
 
-  const [{ data: student }, { data: followups }, { data: photos }] = await Promise.all([
-    supabase.from("students").select("*").eq("id", record.student_id).single(),
-    supabase
-      .from("support_record_followups")
-      .select("*")
-      .eq("support_record_id", recordId)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("student_photos")
-      .select("*")
-      .eq("support_record_id", recordId)
-      .order("created_at", { ascending: false }),
-  ]);
+  const user = await getCurrentUser();
+
+  const [{ data: student }, { data: followups }, { data: photos }, { data: section }, { data: period }, { data: observations }] =
+    await Promise.all([
+      supabase.from("students").select("*").eq("id", record.student_id).single(),
+      supabase
+        .from("support_record_followups")
+        .select("*")
+        .eq("support_record_id", recordId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("student_photos")
+        .select("*")
+        .eq("support_record_id", recordId)
+        .order("created_at", { ascending: false }),
+      supabase.from("sections").select("nombre, asignatura").eq("id", sectionId).single(),
+      record.period_id
+        ? supabase.from("periods").select("nombre").eq("id", record.period_id).single()
+        : Promise.resolve({ data: null }),
+      user
+        ? supabase.from("observation_templates").select("*").eq("owner_id", user.id).order("favorito", { ascending: false })
+        : Promise.resolve({ data: [] as ObservationTemplate[] }),
+    ]);
 
   const photoList = (photos as StudentPhoto[]) ?? [];
   const paths = photoList.map((p) => p.storage_path);
@@ -58,6 +75,15 @@ export default async function ApoyoDetallePage({
   }
 
   const s = student as Student | null;
+  const sec = section as { nombre: string; asignatura: string } | null;
+  const per = period as { nombre: string } | null;
+
+  const observationContext = {
+    nombre_estudiante: s ? `${s.primer_apellido} ${s.segundo_apellido ?? ""} ${s.nombre}`.replace(/\s+/g, " ").trim() : undefined,
+    grupo: sec?.nombre,
+    materia: sec?.asignatura,
+    periodo: per?.nombre,
+  };
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-10">
@@ -76,7 +102,12 @@ export default async function ApoyoDetallePage({
       </p>
 
       <div className="mt-6 flex flex-col gap-6">
-        <SupportRecordEditForm sectionId={sectionId} record={record as SupportRecord} />
+        <SupportRecordEditForm
+          sectionId={sectionId}
+          record={record as SupportRecord}
+          observations={(observations as ObservationTemplate[]) ?? []}
+          observationContext={observationContext}
+        />
         <SupportRecordFollowups
           sectionId={sectionId}
           recordId={recordId}

@@ -2,11 +2,14 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { saveInstrumentResult } from "@/lib/actions/instruments";
+import { ObservationPicker } from "@/components/observation-picker";
+import type { ObservationContext } from "@/lib/observation-variables";
 import type {
   InstrumentCriterio,
   InstrumentNivel,
   InstrumentResult,
   InstrumentTipo,
+  ObservationTemplate,
   Student,
 } from "@/lib/types";
 
@@ -27,6 +30,8 @@ export function InstrumentGradingPager({
   levels,
   students,
   initialResults,
+  observations,
+  observationContext,
 }: {
   applicationId: string;
   tipo: InstrumentTipo;
@@ -34,6 +39,8 @@ export function InstrumentGradingPager({
   levels: InstrumentNivel[];
   students: Student[];
   initialResults: InstrumentResult[];
+  observations: ObservationTemplate[];
+  observationContext: Omit<ObservationContext, "nombre_estudiante">;
 }) {
   const [isPending, startTransition] = useTransition();
   const [index, setIndex] = useState(0);
@@ -201,7 +208,20 @@ export function InstrumentGradingPager({
       )}
 
       <div className="mt-4">
-        <label className="block text-xs font-medium text-zinc-600">Observación (opcional)</label>
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-medium text-zinc-600">Observación (opcional)</label>
+          <ObservationPicker
+            observations={observations}
+            context={{ ...observationContext, nombre_estudiante: studentName(student) }}
+            onInsert={(text) => {
+              const next: StudentState = {
+                ...current,
+                observacion: current.observacion ? `${current.observacion} ${text}` : text,
+              };
+              setState((prev) => ({ ...prev, [student.id]: next }));
+            }}
+          />
+        </div>
         <textarea
           rows={2}
           value={current.observacion}
