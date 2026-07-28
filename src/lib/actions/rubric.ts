@@ -120,6 +120,29 @@ export async function closePeriod(sectionId: string, periodId: string) {
   revalidatePath(`/secciones/${sectionId}/ajustes`);
 }
 
+// Cierra de una vez todos los periodos de la sección que todavía no están
+// cerrados (para no tener que entrar a Ajustes y cerrarlos uno por uno).
+export async function closeAllPeriods(sectionId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { error } = await supabase
+    .from("periods")
+    .update({
+      estado: "cerrado",
+      cerrado_at: new Date().toISOString(),
+      cerrado_por: user?.id ?? null,
+    })
+    .eq("section_id", sectionId)
+    .neq("estado", "cerrado");
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard");
+  revalidatePath(`/secciones/${sectionId}/ajustes`);
+}
+
 export async function reopenPeriod(sectionId: string, periodId: string, formData: FormData) {
   const supabase = await createClient();
   const razon = String(formData.get("razon") ?? "").trim();

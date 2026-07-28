@@ -32,6 +32,7 @@ export async function deleteSectionPermanently(sectionId: string) {
   const { error } = await supabase.from("sections").delete().eq("id", sectionId);
   if (error) throw new Error(error.message);
   revalidatePath("/secciones/archivadas");
+  revalidatePath("/dashboard");
 }
 
 // Reutiliza una institución existente si el nombre coincide una vez

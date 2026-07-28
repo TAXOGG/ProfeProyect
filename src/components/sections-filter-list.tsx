@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { SectionCardActions } from "@/components/section-card-actions";
 import type { SectionWithInstitution } from "@/lib/types";
 
 const DIACRITICS_RE = new RegExp("[\\u0300-\\u036f]", "g");
@@ -76,18 +77,25 @@ export function SectionsFilterList({ sections }: { sections: SectionWithInstitut
       )}
 
       {filtered.map((s) => (
-        <Link
+        <div
           key={s.id}
-          href={`/secciones/${s.id}/estudiantes`}
           className="rounded-lg border border-zinc-200 bg-white px-5 py-4 shadow-sm hover:border-zinc-400"
         >
-          <p className="font-medium text-zinc-900">
-            {s.asignatura} — {s.nombre}
-          </p>
-          <p className="text-sm text-zinc-500">
-            {s.institutionNombre} · {s.nivel} · Ciclo {s.ciclo_escolar}
-          </p>
-        </Link>
+          <Link href={`/secciones/${s.id}/estudiantes`} className="block">
+            <p className="font-medium text-zinc-900">
+              {s.asignatura} — {s.nombre}
+            </p>
+            <p className="text-sm text-zinc-500">
+              {s.institutionNombre} · {s.nivel} · Ciclo {s.ciclo_escolar}
+            </p>
+          </Link>
+          <div className="mt-2 border-t border-zinc-100 pt-2">
+            <SectionCardActions
+              sectionId={s.id}
+              sectionLabel={`${s.asignatura} — ${s.nombre}`}
+            />
+          </div>
+        </div>
       ))}
 
       {filtered.length === 0 && sections.length > 0 && (
