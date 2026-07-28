@@ -23,7 +23,7 @@ export async function createHomeworkItem(sectionId: string, periodId: string, fo
 
   const descripcion = String(formData.get("descripcion") ?? "").trim();
   const fecha = String(formData.get("fecha") ?? "").trim();
-  if (!descripcion) return;
+  if (!descripcion) throw new Error("Falta la descripción de la tarea.");
 
   const { count } = await supabase
     .from("homework_items")
@@ -56,7 +56,7 @@ export async function updateHomeworkItem(
 
   const descripcion = String(formData.get("descripcion") ?? "").trim();
   const fecha = String(formData.get("fecha") ?? "").trim();
-  if (!descripcion) return;
+  if (!descripcion) throw new Error("Falta la descripción de la tarea.");
 
   const { error } = await supabase
     .from("homework_items")

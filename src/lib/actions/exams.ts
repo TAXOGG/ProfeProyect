@@ -24,7 +24,8 @@ export async function createExam(sectionId: string, periodId: string, formData: 
   const nombre = String(formData.get("nombre") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 0);
   const peso = Number(formData.get("peso_pct") ?? 0) / 100;
-  if (!nombre || puntosMax <= 0) return;
+  if (!nombre) throw new Error("Falta el nombre de la prueba.");
+  if (puntosMax <= 0) throw new Error("Los puntos máximos deben ser mayores a 0.");
 
   const { count } = await supabase
     .from("exams")
@@ -55,7 +56,8 @@ export async function updateExam(sectionId: string, examId: string, formData: Fo
   const nombre = String(formData.get("nombre") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 0);
   const peso = Number(formData.get("peso_pct") ?? 0) / 100;
-  if (!nombre || puntosMax <= 0) return;
+  if (!nombre) throw new Error("Falta el nombre de la prueba.");
+  if (puntosMax <= 0) throw new Error("Los puntos máximos deben ser mayores a 0.");
 
   const { error } = await supabase
     .from("exams")

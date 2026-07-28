@@ -74,6 +74,7 @@ export function ProjectStagesManager({
                     name="puntos_max"
                     type="number"
                     min={1}
+                    required
                     defaultValue={e.puntos_max}
                     className="w-20 rounded-md border border-zinc-300 px-2 py-1 text-sm"
                   />

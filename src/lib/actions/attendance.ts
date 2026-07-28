@@ -10,7 +10,8 @@ export async function createSession(sectionId: string, periodId: string, formDat
 
   const fecha = String(formData.get("fecha") ?? "").trim();
   const lecciones = Number(formData.get("lecciones_impartidas") ?? 1);
-  if (!fecha || lecciones <= 0) return;
+  if (!fecha) throw new Error("Falta la fecha de la sesión.");
+  if (lecciones <= 0) throw new Error("Las lecciones impartidas deben ser mayores a 0.");
 
   const { error } = await supabase.from("attendance_sessions").insert({
     section_id: sectionId,
@@ -28,7 +29,8 @@ export async function updateSession(sectionId: string, sessionId: string, formDa
 
   const fecha = String(formData.get("fecha") ?? "").trim();
   const lecciones = Number(formData.get("lecciones_impartidas") ?? 1);
-  if (!fecha || lecciones <= 0) return;
+  if (!fecha) throw new Error("Falta la fecha de la sesión.");
+  if (lecciones <= 0) throw new Error("Las lecciones impartidas deben ser mayores a 0.");
 
   const { error } = await supabase
     .from("attendance_sessions")

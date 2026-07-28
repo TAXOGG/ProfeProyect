@@ -82,6 +82,7 @@ export function CotidianoIndicatorsManager({
                     name="puntos_max"
                     type="number"
                     min={1}
+                    required
                     defaultValue={i.puntos_max}
                     className="w-16 rounded-md border border-zinc-300 px-2 py-1 text-sm"
                   />

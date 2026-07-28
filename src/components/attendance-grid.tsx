@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { upsertRecord } from "@/lib/actions/attendance";
 import { formatAttendanceValue, parseAttendanceInput } from "@/lib/attendance-parse";
 import { ConfirmModal } from "@/components/confirm-modal";
@@ -390,7 +391,11 @@ export function AttendanceGrid({
             {students.length === 0 && (
               <tr>
                 <td colSpan={visibleSessions.length + 4} className="px-4 py-6 text-center text-zinc-400">
-                  No hay estudiantes activos en esta sección.
+                  No hay estudiantes activos en esta sección.{" "}
+                  <Link href={`/secciones/${sectionId}/estudiantes`} className="text-teal-700 underline">
+                    Agregá o revisá el estado de tus estudiantes
+                  </Link>
+                  .
                 </td>
               </tr>
             )}

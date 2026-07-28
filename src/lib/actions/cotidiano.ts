@@ -24,7 +24,8 @@ export async function createIndicador(sectionId: string, periodId: string, formD
   const descripcion = String(formData.get("descripcion") ?? "").trim();
   const fechaAplicacion = String(formData.get("fecha_aplicacion") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 3);
-  if (!descripcion) return;
+  if (!descripcion) throw new Error("Falta la descripción del indicador.");
+  if (puntosMax <= 0) throw new Error("Los puntos máximos deben ser mayores a 0.");
 
   const { count } = await supabase
     .from("cotidiano_indicators")
@@ -59,7 +60,8 @@ export async function updateIndicador(
   const descripcion = String(formData.get("descripcion") ?? "").trim();
   const fechaAplicacion = String(formData.get("fecha_aplicacion") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 3);
-  if (!descripcion) return;
+  if (!descripcion) throw new Error("Falta la descripción del indicador.");
+  if (puntosMax <= 0) throw new Error("Los puntos máximos deben ser mayores a 0.");
 
   const { error } = await supabase
     .from("cotidiano_indicators")

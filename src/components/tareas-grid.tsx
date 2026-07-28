@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { upsertHomeworkScore } from "@/lib/actions/homework";
 import { db } from "@/lib/offline/db";
 import { enqueueAction, pullTareasData } from "@/lib/offline/sync-engine";
@@ -182,7 +183,11 @@ export function TareasGrid({
           {students.length === 0 && (
             <tr>
               <td colSpan={items.length + 4} className="px-4 py-6 text-center text-zinc-400">
-                No hay estudiantes activos en esta sección.
+                No hay estudiantes activos en esta sección.{" "}
+                <Link href={`/secciones/${sectionId}/estudiantes`} className="text-teal-700 underline">
+                  Agregá o revisá el estado de tus estudiantes
+                </Link>
+                .
               </td>
             </tr>
           )}

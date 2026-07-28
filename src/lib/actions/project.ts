@@ -8,7 +8,8 @@ export async function createStage(sectionId: string, periodId: string, formData:
 
   const nombre = String(formData.get("nombre") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 0);
-  if (!nombre || puntosMax <= 0) return;
+  if (!nombre) throw new Error("Falta el nombre de la etapa.");
+  if (puntosMax <= 0) throw new Error("Los puntos máximos deben ser mayores a 0.");
 
   const { error } = await supabase.from("project_stages").insert({
     section_id: sectionId,
@@ -26,7 +27,8 @@ export async function updateStage(sectionId: string, stageId: string, formData: 
 
   const nombre = String(formData.get("nombre") ?? "").trim();
   const puntosMax = Number(formData.get("puntos_max") ?? 0);
-  if (!nombre || puntosMax <= 0) return;
+  if (!nombre) throw new Error("Falta el nombre de la etapa.");
+  if (puntosMax <= 0) throw new Error("Los puntos máximos deben ser mayores a 0.");
 
   const { error } = await supabase
     .from("project_stages")

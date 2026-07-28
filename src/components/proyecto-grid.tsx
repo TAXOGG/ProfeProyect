@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import Link from "next/link";
 import { upsertStageScore } from "@/lib/actions/project";
 import { useThresholdGrid } from "@/lib/use-threshold-grid";
 import { ConfirmModal } from "@/components/confirm-modal";
@@ -165,7 +166,11 @@ export function ProyectoGrid({
           {students.length === 0 && (
             <tr>
               <td colSpan={stages.length + 4} className="px-4 py-6 text-center text-zinc-400">
-                No hay estudiantes activos en esta sección.
+                No hay estudiantes activos en esta sección.{" "}
+                <Link href={`/secciones/${sectionId}/estudiantes`} className="text-teal-700 underline">
+                  Agregá o revisá el estado de tus estudiantes
+                </Link>
+                .
               </td>
             </tr>
           )}
