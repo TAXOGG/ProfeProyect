@@ -70,6 +70,13 @@ export const MODULE_COLORS: Record<
     headerBorder: "border-zinc-200",
     cellBg: "bg-zinc-50/60",
   },
+  historial: {
+    dot: "bg-slate-400",
+    text: "text-slate-600",
+    headerBg: "bg-slate-50",
+    headerBorder: "border-slate-200",
+    cellBg: "bg-slate-50/60",
+  },
 };
 
 export function moduleColor(slug: string) {
