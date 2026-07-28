@@ -33,6 +33,7 @@ async function pullSectionBase(sectionId: string) {
         .select("*")
         .eq("section_id", sectionId)
         .eq("estado", "activo")
+        .is("deleted_at", null)
         .order("numero"),
     ]);
 

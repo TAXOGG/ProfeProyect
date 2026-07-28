@@ -138,6 +138,7 @@ export type Student = {
   contacto_nombre: string | null;
   contacto_parentesco: string | null;
   contacto_correo: string | null;
+  deleted_at: string | null;
 };
 
 export type StudentPhoto = {

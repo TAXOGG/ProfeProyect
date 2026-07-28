@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createStudent } from "@/lib/actions/students";
 import { StudentsTable } from "@/components/students-table";
@@ -14,11 +15,19 @@ export default async function EstudiantesPage({
   const { sectionId } = await params;
   const supabase = await createClient();
 
-  const { data: students } = await supabase
-    .from("students")
-    .select("*")
-    .eq("section_id", sectionId)
-    .order("numero");
+  const [{ data: students }, { count: papeleraCount }] = await Promise.all([
+    supabase
+      .from("students")
+      .select("*")
+      .eq("section_id", sectionId)
+      .is("deleted_at", null)
+      .order("numero"),
+    supabase
+      .from("students")
+      .select("id", { count: "exact", head: true })
+      .eq("section_id", sectionId)
+      .not("deleted_at", "is", null),
+  ]);
 
   const list = (students as Student[]) ?? [];
   const activos = list.filter((s) => s.estado === "activo").length;
@@ -48,6 +57,15 @@ export default async function EstudiantesPage({
         </div>
 
         <StudentsTable sectionId={sectionId} students={list} />
+
+        {(papeleraCount ?? 0) > 0 && (
+          <Link
+            href={`/secciones/${sectionId}/papelera`}
+            className="mt-2 inline-block text-xs font-medium text-zinc-500 underline hover:text-zinc-800"
+          >
+            Ver papelera ({papeleraCount})
+          </Link>
+        )}
       </div>
 
       <StudentImportForm sectionId={sectionId} />

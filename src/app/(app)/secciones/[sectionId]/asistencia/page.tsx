@@ -31,6 +31,7 @@ export default async function AsistenciaPage({
       .select("*")
       .eq("section_id", sectionId)
       .eq("estado", "activo")
+      .is("deleted_at", null)
       .order("numero"),
   ]);
 

@@ -71,6 +71,7 @@ export async function fetchSectionGradesData(
           .select("*")
           .eq("section_id", sectionId)
           .eq("estado", "activo")
+          .is("deleted_at", null)
           .order("numero");
         if (studentIdFilter) q = q.eq("id", studentIdFilter);
         return q;

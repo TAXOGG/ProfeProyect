@@ -185,7 +185,8 @@ export async function importStudentsFromGrid(
   const { data: existingStudents } = await supabase
     .from("students")
     .select("id, primer_apellido, segundo_apellido, nombre, identificacion, numero")
-    .eq("section_id", sectionId);
+    .eq("section_id", sectionId)
+    .is("deleted_at", null);
 
   // Un estudiante ya cargado se reconoce por identificación igual, o por
   // nombre completo igual si no hay identificación en alguno de los dos.
@@ -319,6 +320,7 @@ async function maxStudentNumero(
     .from("students")
     .select("numero")
     .eq("section_id", sectionId)
+    .is("deleted_at", null)
     .order("numero", { ascending: false })
     .limit(1)
     .single();
@@ -336,7 +338,8 @@ export async function createStudent(sectionId: string, formData: FormData) {
   const { count } = await supabase
     .from("students")
     .select("id", { count: "exact", head: true })
-    .eq("section_id", sectionId);
+    .eq("section_id", sectionId)
+    .is("deleted_at", null);
 
   const { error } = await insertWithAutoIncrementRetry(
     (count ?? 0) + 1,
@@ -449,9 +452,33 @@ export async function updateStudentEstado(
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
 }
 
+// Manda a la papelera en vez de borrar directo: se puede restaurar desde
+// /secciones/[sectionId]/papelera si fue un error.
 export async function deleteStudent(sectionId: string, studentId: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from("students").delete().eq("id", studentId);
+  const { error } = await supabase.rpc("soft_delete_student", { p_student_id: studentId });
   if (error) throw new Error(error.message);
   revalidatePath(`/secciones/${sectionId}/estudiantes`);
+  revalidatePath(`/secciones/${sectionId}/papelera`);
+}
+
+export async function restoreStudent(sectionId: string, studentId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("restore_student", { p_student_id: studentId });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/secciones/${sectionId}/estudiantes`);
+  revalidatePath(`/secciones/${sectionId}/papelera`);
+}
+
+// Borrado real y permanente, solo para elementos que ya están en la
+// papelera (deleted_at is not null) — vaciar la papelera a propósito.
+export async function purgeStudent(sectionId: string, studentId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("students")
+    .delete()
+    .eq("id", studentId)
+    .not("deleted_at", "is", null);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/secciones/${sectionId}/papelera`);
 }
