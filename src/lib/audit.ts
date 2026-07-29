@@ -19,6 +19,9 @@ export const TABLE_LABEL: Record<string, string> = {
   homework_scores: "Tareas",
   project_scores: "Proyecto",
   attendance_records: "Asistencia",
+  instrument_results: "Instrumento aplicado",
+  support_records: "Apoyo",
+  student_photos: "Evidencia",
 };
 
 // Campos que no aportan nada útil en el resumen (ids técnicos, llaves
@@ -34,6 +37,10 @@ const IGNORED_FIELDS = new Set([
   "session_id",
   "numero",
   "created_at",
+  "updated_at",
+  "application_id",
+  "criterio_scores",
+  "storage_path",
 ]);
 
 function formatValue(v: unknown): string {
@@ -52,6 +59,17 @@ export function summarizeAuditEntry(entry: AuditEntry): string {
     if (!wasDeleted && isDeleted) return "Enviado a la papelera";
     if (wasDeleted && !isDeleted) return "Restaurado desde la papelera";
     if (entry.action === "INSERT") return "Estudiante agregado";
+  }
+
+  if (entry.table_name === "student_photos") {
+    const before = entry.old_data;
+    const after = entry.new_data;
+    const wasDeleted = !!before?.deleted_at;
+    const isDeleted = !!after?.deleted_at;
+    if (!wasDeleted && isDeleted) return "Evidencia enviada a la papelera";
+    if (wasDeleted && !isDeleted) return "Evidencia restaurada";
+    if (entry.action === "INSERT") return "Evidencia agregada";
+    if (entry.action === "DELETE") return "Evidencia eliminada permanentemente";
   }
 
   const before = entry.old_data ?? {};

@@ -11,6 +11,7 @@ const EXT_BY_TYPE: Record<string, string> = {
   "image/webp": "webp",
   "image/heic": "heic",
   "image/heif": "heif",
+  "application/pdf": "pdf",
 };
 
 /**
@@ -18,7 +19,7 @@ const EXT_BY_TYPE: Record<string, string> = {
  * (se puede falsificar). Antes de guardar cualquier archivo, se confirma el formato real
  * leyendo los primeros bytes, en vez de confiar en lo que el cliente dice que es.
  */
-function detectImageType(bytes: Uint8Array): string | null {
+function detectFileType(bytes: Uint8Array): string | null {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
     return "image/jpeg";
   }
@@ -51,6 +52,16 @@ function detectImageType(bytes: Uint8Array): string | null {
       return "image/heic";
     }
   }
+  if (
+    bytes.length >= 5 &&
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2d
+  ) {
+    return "application/pdf";
+  }
   return null;
 }
 
@@ -70,22 +81,24 @@ export async function uploadStudentPhoto(
 
   const file = formData.get("foto");
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Selecciona o toma una foto." };
+    return { error: "Selecciona un archivo o toma una foto." };
   }
   if (file.size > MAX_SIZE_BYTES) {
-    return { error: "La foto pesa más de 10MB. Intenta con una foto de menor resolución." };
+    return { error: "El archivo pesa más de 10MB. Intenta con uno más liviano." };
   }
 
   const headerBytes = new Uint8Array(await file.slice(0, 32).arrayBuffer());
-  const realType = detectImageType(headerBytes);
+  const realType = detectFileType(headerBytes);
   if (!realType) {
-    return { error: "Solo se aceptan fotos (JPG, PNG, HEIC o WEBP)." };
+    return { error: "Solo se aceptan fotos (JPG, PNG, HEIC, WEBP) o PDF." };
   }
 
   const categoria = String(formData.get("categoria") ?? "").trim() || null;
   const nota = String(formData.get("nota") ?? "").trim() || null;
   const supportRecordId = String(formData.get("support_record_id") ?? "").trim() || null;
+  const instrumentResultId = String(formData.get("instrument_result_id") ?? "").trim() || null;
   const ext = EXT_BY_TYPE[realType] ?? "jpg";
+  const fileType = realType === "application/pdf" ? "pdf" : "imagen";
   const path = `${user.id}/${studentId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
@@ -100,6 +113,9 @@ export async function uploadStudentPhoto(
     nota,
     storage_path: path,
     support_record_id: supportRecordId,
+    instrument_result_id: instrumentResultId,
+    file_type: fileType,
+    file_name: file.name || null,
   });
   if (insertError) {
     await supabase.storage.from(BUCKET).remove([path]);
@@ -107,11 +123,39 @@ export async function uploadStudentPhoto(
   }
 
   revalidatePath(`/secciones/${sectionId}/estudiantes/${studentId}/fotos`);
+  revalidatePath(`/secciones/${sectionId}/estudiantes/${studentId}/expediente`);
   if (supportRecordId) revalidatePath(`/secciones/${sectionId}/apoyos/${supportRecordId}`);
   return { success: true };
 }
 
-export async function deleteStudentPhoto(
+// Soft-delete, igual que estudiantes y notas (0019/0038): el archivo sigue en
+// el bucket y el registro sigue en la base, solo se marca deleted_at, para
+// poder restaurarlo si fue un error.
+export async function deleteStudentPhoto(sectionId: string, studentId: string, photoId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("student_photos")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", photoId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/secciones/${sectionId}/estudiantes/${studentId}/fotos`);
+  revalidatePath(`/secciones/${sectionId}/estudiantes/${studentId}/expediente`);
+}
+
+export async function restoreStudentPhoto(sectionId: string, studentId: string, photoId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("student_photos")
+    .update({ deleted_at: null })
+    .eq("id", photoId);
+  if (error) throw new Error(error.message);
+  revalidatePath(`/secciones/${sectionId}/estudiantes/${studentId}/fotos`);
+  revalidatePath(`/secciones/${sectionId}/estudiantes/${studentId}/expediente`);
+}
+
+// Borrado definitivo: solo disponible desde la papelera, elimina el archivo
+// del bucket además de la fila.
+export async function purgeStudentPhoto(
   sectionId: string,
   studentId: string,
   photoId: string,

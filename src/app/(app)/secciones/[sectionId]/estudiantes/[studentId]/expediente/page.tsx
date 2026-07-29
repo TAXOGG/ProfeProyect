@@ -62,6 +62,7 @@ export default async function ExpedientePage({
       .from("student_photos")
       .select("*")
       .eq("student_id", studentId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase
       .from("audit_log")
@@ -332,7 +333,7 @@ export default async function ExpedientePage({
             href={`/secciones/${sectionId}/estudiantes/${studentId}/fotos`}
             className="text-xs font-medium text-teal-700 hover:underline"
           >
-            Ver / agregar fotos
+            Ver / agregar evidencia
           </Link>
         </div>
         <div className="mt-2">

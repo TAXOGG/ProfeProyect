@@ -9,10 +9,14 @@ export function UploadPhotoForm({
   sectionId,
   studentId,
   supportRecordId,
+  instrumentResultId,
+  compact,
 }: {
   sectionId: string;
   studentId: string;
   supportRecordId?: string;
+  instrumentResultId?: string;
+  compact?: boolean;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -27,20 +31,19 @@ export function UploadPhotoForm({
     });
   }
 
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
-      <h3 className="flex items-center text-sm font-semibold text-zinc-900">
-        Agregar foto
-        <HelpTooltip text="En el teléfono, al tocar 'Foto' se abre la cámara directamente. Solo se aceptan imágenes (JPG, PNG, HEIC, WEBP) de hasta 10MB." />
-      </h3>
+  const body = (
+    <>
       <form ref={formRef} action={handleSubmit} className="mt-3 flex flex-col gap-3">
         {supportRecordId && <input type="hidden" name="support_record_id" value={supportRecordId} />}
+        {instrumentResultId && (
+          <input type="hidden" name="instrument_result_id" value={instrumentResultId} />
+        )}
         <div>
-          <label className="block text-xs font-medium text-zinc-600">Foto</label>
+          <label className="block text-xs font-medium text-zinc-600">Foto o PDF</label>
           <input
             name="foto"
             type="file"
-            accept="image/*"
+            accept="image/*,application/pdf"
             capture="environment"
             required
             className="mt-1 w-full text-sm text-zinc-700 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
@@ -76,12 +79,24 @@ export function UploadPhotoForm({
           disabled={isPending}
           className="self-start rounded-md bg-teal-700 px-4 py-1.5 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
         >
-          {isPending ? "Subiendo..." : "Guardar foto"}
+          {isPending ? "Subiendo..." : "Guardar evidencia"}
         </button>
       </form>
 
       {result?.error && <p className="mt-3 text-sm text-red-600">{result.error}</p>}
-      {result?.success && <p className="mt-3 text-sm text-emerald-600">Foto guardada.</p>}
+      {result?.success && <p className="mt-3 text-sm text-emerald-600">Evidencia guardada.</p>}
+    </>
+  );
+
+  if (compact) return <div>{body}</div>;
+
+  return (
+    <div className="rounded-lg border border-zinc-200 bg-white p-5">
+      <h3 className="flex items-center text-sm font-semibold text-zinc-900">
+        Agregar evidencia
+        <HelpTooltip text="En el teléfono, al tocar 'Foto o PDF' se puede abrir la cámara directamente. Se aceptan imágenes (JPG, PNG, HEIC, WEBP) o PDF, hasta 10MB." />
+      </h3>
+      {body}
     </div>
   );
 }

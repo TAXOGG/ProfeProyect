@@ -52,6 +52,7 @@ export default async function ApoyoDetallePage({
         .from("student_photos")
         .select("*")
         .eq("support_record_id", recordId)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       supabase.from("sections").select("nombre, asignatura").eq("id", sectionId).single(),
       record.period_id

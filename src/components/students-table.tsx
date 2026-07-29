@@ -73,7 +73,7 @@ export function StudentsTable({
               <th className="px-4 py-2">Tipo de apoyo</th>
               <th className="px-4 py-2">Estado</th>
               <th className="px-4 py-2">Contacto</th>
-              <th className="px-4 py-2">Fotos</th>
+              <th className="px-4 py-2">Evidencia</th>
               <th className="px-4 py-2">Expediente</th>
             </tr>
           </thead>
@@ -116,7 +116,7 @@ export function StudentsTable({
                     href={`/secciones/${sectionId}/estudiantes/${s.id}/fotos`}
                     className="text-xs font-medium text-teal-700 hover:underline"
                   >
-                    Ver fotos
+                    Ver evidencia
                   </Link>
                 </td>
                 <td className="px-4 py-2">

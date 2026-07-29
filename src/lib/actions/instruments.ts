@@ -528,18 +528,22 @@ export async function saveInstrumentResult(
     }
   }
 
-  const { error } = await supabase.from("instrument_results").upsert(
-    {
-      application_id: applicationId,
-      student_id: studentId,
-      criterio_scores: input.criterioScores,
-      puntaje_obtenido: puntajeObtenido,
-      observacion: input.observacion || null,
-      estado: input.finalize ? "completado" : "borrador",
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "application_id,student_id" },
-  );
+  const { data: resultRow, error } = await supabase
+    .from("instrument_results")
+    .upsert(
+      {
+        application_id: applicationId,
+        student_id: studentId,
+        criterio_scores: input.criterioScores,
+        puntaje_obtenido: puntajeObtenido,
+        observacion: input.observacion || null,
+        estado: input.finalize ? "completado" : "borrador",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "application_id,student_id" },
+    )
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
 
   if (input.finalize && generaNota && application.target_kind && application.target_id) {
@@ -589,4 +593,6 @@ export async function saveInstrumentResult(
   if (application.rubro_destino) {
     revalidatePath(`/secciones/${application.section_id}/${application.rubro_destino}`);
   }
+
+  return { id: resultRow.id as string };
 }

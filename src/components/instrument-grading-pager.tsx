@@ -3,6 +3,8 @@
 import { useMemo, useState, useTransition } from "react";
 import { saveInstrumentResult } from "@/lib/actions/instruments";
 import { ObservationPicker } from "@/components/observation-picker";
+import { UploadPhotoForm } from "@/components/upload-photo-form";
+import { PhotoGallery } from "@/components/photo-gallery";
 import type { ObservationContext } from "@/lib/observation-variables";
 import type {
   InstrumentCriterio,
@@ -11,19 +13,24 @@ import type {
   InstrumentTipo,
   ObservationTemplate,
   Student,
+  StudentPhoto,
 } from "@/lib/types";
 
 type StudentState = {
+  resultId: string | null;
   criterioScores: Record<string, string>;
   observacion: string;
   estado: "borrador" | "completado";
 };
+
+type PhotoWithUrl = StudentPhoto & { url: string | null };
 
 function studentName(s: Student) {
   return `${s.primer_apellido} ${s.segundo_apellido ?? ""} ${s.nombre}`.replace(/\s+/g, " ").trim();
 }
 
 export function InstrumentGradingPager({
+  sectionId,
   applicationId,
   tipo,
   criteria,
@@ -32,7 +39,9 @@ export function InstrumentGradingPager({
   initialResults,
   observations,
   observationContext,
+  evidenceByResultId,
 }: {
+  sectionId: string;
   applicationId: string;
   tipo: InstrumentTipo;
   criteria: InstrumentCriterio[];
@@ -41,6 +50,7 @@ export function InstrumentGradingPager({
   initialResults: InstrumentResult[];
   observations: ObservationTemplate[];
   observationContext: Omit<ObservationContext, "nombre_estudiante">;
+  evidenceByResultId: Record<string, PhotoWithUrl[]>;
 }) {
   const [isPending, startTransition] = useTransition();
   const [index, setIndex] = useState(0);
@@ -50,6 +60,7 @@ export function InstrumentGradingPager({
     const map: Record<string, StudentState> = {};
     for (const r of initialResults) {
       map[r.student_id] = {
+        resultId: r.id,
         criterioScores: r.criterio_scores ?? {},
         observacion: r.observacion ?? "",
         estado: r.estado,
@@ -78,6 +89,7 @@ export function InstrumentGradingPager({
 
   const student = students[Math.min(index, students.length - 1)];
   const current: StudentState = state[student.id] ?? {
+    resultId: null,
     criterioScores: {},
     observacion: "",
     estado: "borrador",
@@ -95,14 +107,19 @@ export function InstrumentGradingPager({
   function persist(next: StudentState, finalize: boolean) {
     setError(null);
     setSavedFlag(false);
-    setState((prev) => ({ ...prev, [student.id]: next }));
+    const studentId = student.id;
+    setState((prev) => ({ ...prev, [studentId]: next }));
     startTransition(async () => {
       try {
-        await saveInstrumentResult(applicationId, student.id, {
+        const { id } = await saveInstrumentResult(applicationId, studentId, {
           criterioScores: next.criterioScores,
           observacion: next.observacion,
           finalize,
         });
+        setState((prev) => ({
+          ...prev,
+          [studentId]: { ...(prev[studentId] ?? next), resultId: id },
+        }));
         setSavedFlag(true);
       } catch (e) {
         setError(e instanceof Error ? e.message : "No se pudo guardar.");
@@ -230,6 +247,29 @@ export function InstrumentGradingPager({
           placeholder="Nota para vos o para el expediente del estudiante"
           className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400"
         />
+      </div>
+
+      <div className="mt-4 border-t border-zinc-100 pt-3">
+        <label className="block text-xs font-medium text-zinc-600">Evidencia</label>
+        {current.resultId ? (
+          <div className="mt-1.5 flex flex-col gap-2">
+            <PhotoGallery
+              sectionId={sectionId}
+              studentId={student.id}
+              photos={evidenceByResultId[current.resultId] ?? []}
+            />
+            <UploadPhotoForm
+              sectionId={sectionId}
+              studentId={student.id}
+              instrumentResultId={current.resultId}
+              compact
+            />
+          </div>
+        ) : (
+          <p className="mt-1 text-xs text-zinc-400">
+            Elegí un nivel o escribí una observación para poder adjuntar evidencia.
+          </p>
+        )}
       </div>
 
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}

@@ -11,7 +11,11 @@ import type {
   InstrumentTipo,
   ObservationTemplate,
   Student,
+  StudentPhoto,
 } from "@/lib/types";
+
+const BUCKET = "student-photos";
+const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
 export default async function AplicacionPage({
   params,
@@ -70,6 +74,35 @@ export default async function AplicacionPage({
       ? await supabase.from("instrument_levels").select("*").in("criterio_id", criteriaIds).order("orden")
       : { data: [] as InstrumentNivel[] };
 
+  const resultIds = ((results as InstrumentResult[]) ?? []).map((r) => r.id);
+  const { data: evidence } =
+    resultIds.length > 0
+      ? await supabase
+          .from("student_photos")
+          .select("*")
+          .in("instrument_result_id", resultIds)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+      : { data: [] as StudentPhoto[] };
+
+  const evidenceList = (evidence as StudentPhoto[]) ?? [];
+  const evidencePaths = evidenceList.map((p) => p.storage_path);
+  let evidenceSignedUrlByPath: Record<string, string> = {};
+  if (evidencePaths.length > 0) {
+    const { data: signed } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrls(evidencePaths, SIGNED_URL_TTL_SECONDS);
+    evidenceSignedUrlByPath = Object.fromEntries(
+      (signed ?? []).filter((s) => s.signedUrl).map((s) => [s.path, s.signedUrl as string]),
+    );
+  }
+  const evidenceByResultId: Record<string, (StudentPhoto & { url: string | null })[]> = {};
+  for (const p of evidenceList) {
+    if (!p.instrument_result_id) continue;
+    const withUrl = { ...p, url: evidenceSignedUrlByPath[p.storage_path] ?? null };
+    (evidenceByResultId[p.instrument_result_id] ??= []).push(withUrl);
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -86,6 +119,7 @@ export default async function AplicacionPage({
       </div>
 
       <InstrumentGradingPager
+        sectionId={sectionId}
         applicationId={applicationId}
         tipo={instrument.tipo as InstrumentTipo}
         criteria={criteriaList}
@@ -98,6 +132,7 @@ export default async function AplicacionPage({
           materia: instrument.materia ?? sec?.asignatura,
           periodo: per?.nombre,
         }}
+        evidenceByResultId={evidenceByResultId}
       />
     </div>
   );

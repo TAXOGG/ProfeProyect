@@ -213,6 +213,8 @@ export type Student = {
   deleted_at: string | null;
 };
 
+export type EvidenceFileType = "imagen" | "pdf";
+
 export type StudentPhoto = {
   id: string;
   student_id: string;
@@ -221,6 +223,10 @@ export type StudentPhoto = {
   nota: string | null;
   storage_path: string;
   support_record_id: string | null;
+  file_type: EvidenceFileType;
+  file_name: string | null;
+  instrument_result_id: string | null;
+  deleted_at: string | null;
   created_at: string;
 };
 

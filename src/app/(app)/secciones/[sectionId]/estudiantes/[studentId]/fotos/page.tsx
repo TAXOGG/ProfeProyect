@@ -16,19 +16,27 @@ export default async function StudentFotosPage({
   const { sectionId, studentId } = await params;
   const supabase = await createClient();
 
-  const [{ data: student }, { data: photos }] = await Promise.all([
+  const [{ data: student }, { data: photos }, { data: deletedPhotos }] = await Promise.all([
     supabase.from("students").select("*").eq("id", studentId).single(),
     supabase
       .from("student_photos")
       .select("*")
       .eq("student_id", studentId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("student_photos")
+      .select("*")
+      .eq("student_id", studentId)
+      .not("deleted_at", "is", null)
       .order("created_at", { ascending: false }),
   ]);
 
   if (!student) notFound();
 
   const photoList = (photos as StudentPhoto[]) ?? [];
-  const paths = photoList.map((p) => p.storage_path);
+  const deletedList = (deletedPhotos as StudentPhoto[]) ?? [];
+  const paths = [...photoList, ...deletedList].map((p) => p.storage_path);
 
   let signedUrlByPath: Record<string, string> = {};
   if (paths.length > 0) {
@@ -52,12 +60,12 @@ export default async function StudentFotosPage({
           ← Volver a Estudiantes
         </Link>
         <h2 className="mt-1 text-lg font-semibold text-zinc-900">
-          Fotos de respaldo — {(student as Student).primer_apellido}{" "}
+          Evidencia — {(student as Student).primer_apellido}{" "}
           {(student as Student).segundo_apellido} {(student as Student).nombre}
         </h2>
         <p className="text-sm text-zinc-500">
-          Fotos de tareas, trabajo cotidiano, o cualquier evidencia que quieras guardar de este
-          estudiante. Solo tú puedes verlas.
+          Fotos o PDFs de tareas, trabajo cotidiano, o cualquier evidencia que quieras guardar de
+          este estudiante. Solo tú puedes verla.
         </p>
       </div>
 
@@ -67,6 +75,10 @@ export default async function StudentFotosPage({
         sectionId={sectionId}
         studentId={studentId}
         photos={photoList.map((p) => ({ ...p, url: signedUrlByPath[p.storage_path] ?? null }))}
+        deletedPhotos={deletedList.map((p) => ({
+          ...p,
+          url: signedUrlByPath[p.storage_path] ?? null,
+        }))}
       />
     </div>
   );
