@@ -34,6 +34,12 @@ export default async function ReportesPage({
           >
             Exportar a Excel
           </a>
+          <a
+            href={`/secciones/${sectionId}/informes-masivos`}
+            className="rounded-md border border-zinc-300 bg-white px-4 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          >
+            Informes masivos
+          </a>
           <ExportPdfButton />
         </div>
       </div>

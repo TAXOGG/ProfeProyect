@@ -116,6 +116,148 @@ export async function buildInformeIntegralData(sectionId: string, studentId: str
   };
 }
 
+export type InformeIntegralData = NonNullable<Awaited<ReturnType<typeof buildInformeIntegralData>>>;
+
+// Versión por lotes de buildInformeIntegralData: en vez de volver a pedir los
+// datos de toda la sección (periodos, pruebas, cotidiano, etc.) una vez por
+// cada estudiante, los trae una sola vez y arma el informe de cada uno a
+// partir de ese mismo resultado — evita el N+1 de generar 30 informes.
+export async function buildInformeIntegralBatch(
+  sectionId: string,
+  studentIds: string[],
+): Promise<Map<string, InformeIntegralData>> {
+  const result = new Map<string, InformeIntegralData>();
+  if (studentIds.length === 0) return result;
+
+  const gradesData = await fetchSectionGradesData(sectionId);
+  if (!gradesData) return result;
+
+  const supabase = await createClient();
+
+  const [{ data: applications }, { data: instrumentResults }, { data: supportRecords }] =
+    await Promise.all([
+      supabase
+        .from("instrument_applications")
+        .select("id, fecha, instruments ( nombre, tipo )")
+        .eq("section_id", sectionId),
+      supabase
+        .from("instrument_results")
+        .select("*")
+        .in("student_id", studentIds)
+        .order("updated_at", { ascending: false }),
+      supabase
+        .from("support_records")
+        .select("*")
+        .in("student_id", studentIds)
+        .order("fecha", { ascending: false }),
+    ]);
+
+  const applicationById = new Map(
+    (applications ?? []).map((a) => [
+      a.id,
+      {
+        fecha: a.fecha as string,
+        instrumento: a.instruments as unknown as { nombre: string; tipo: string } | null,
+      },
+    ]),
+  );
+
+  const resultsByStudent = new Map<string, InstrumentResult[]>();
+  for (const r of (instrumentResults as InstrumentResult[]) ?? []) {
+    const list = resultsByStudent.get(r.student_id) ?? [];
+    list.push(r);
+    resultsByStudent.set(r.student_id, list);
+  }
+
+  const supportByStudent = new Map<string, typeof supportRecords>();
+  for (const r of supportRecords ?? []) {
+    const list = supportByStudent.get(r.student_id as string) ?? [];
+    if (list.length < APOYOS_LIMIT) list.push(r);
+    supportByStudent.set(r.student_id as string, list);
+  }
+
+  const supportRecordIds = (supportRecords ?? []).map((r) => r.id as string);
+  const { data: followups } =
+    supportRecordIds.length > 0
+      ? await supabase
+          .from("support_record_followups")
+          .select("*")
+          .in("support_record_id", supportRecordIds)
+          .order("created_at", { ascending: false })
+      : { data: [] as { support_record_id: string; created_at: string; nota: string }[] };
+  const tipoApoyoByRecordId = new Map(
+    (supportRecords ?? []).map((r) => [r.id as string, r.tipo_apoyo as string]),
+  );
+  const followupsByRecord = new Map<string, { created_at: string; nota: string }[]>();
+  for (const f of followups ?? []) {
+    const list = followupsByRecord.get(f.support_record_id) ?? [];
+    list.push(f);
+    followupsByRecord.set(f.support_record_id, list);
+  }
+
+  for (const studentId of studentIds) {
+    const studentGrades = gradesData.grades.find((g) => g.student.id === studentId);
+    if (!studentGrades) continue;
+
+    const resultsForStudent = resultsByStudent.get(studentId) ?? [];
+    const supportList = supportByStudent.get(studentId) ?? [];
+
+    const instrumentos: InformeInstrumentoRow[] = resultsForStudent
+      .filter((r) => r.estado === "completado")
+      .map((r) => {
+        const app = applicationById.get(r.application_id);
+        return {
+          fecha: app?.fecha ?? "",
+          nombre: app?.instrumento?.nombre ?? "—",
+          tipoLabel: app?.instrumento ? TIPO_LABEL[app.instrumento.tipo as InstrumentTipo] : "—",
+          puntaje: r.puntaje_obtenido !== null ? `${r.puntaje_obtenido} pts` : "—",
+        };
+      });
+
+    const apoyos: InformeApoyoRow[] = supportList.map((r) => ({
+      fecha: r.fecha as string,
+      tipoApoyo: r.tipo_apoyo as string,
+      descripcion: r.descripcion as string,
+      estado: r.estado as string,
+    }));
+
+    const supportIdsForStudent = new Set(supportList.map((r) => r.id as string));
+    const observaciones: InformeObservacionRow[] = [
+      ...resultsForStudent
+        .filter((r) => r.observacion)
+        .map((r) => {
+          const app = applicationById.get(r.application_id);
+          return {
+            fecha: app?.fecha ?? r.updated_at,
+            fuente: app?.instrumento ? `Instrumento: ${app.instrumento.nombre}` : "Instrumento",
+            texto: r.observacion as string,
+          };
+        }),
+      ...[...supportIdsForStudent].flatMap((recordId) =>
+        (followupsByRecord.get(recordId) ?? []).map((f) => ({
+          fecha: f.created_at,
+          fuente: `Apoyo: ${tipoApoyoByRecordId.get(recordId) ?? ""}`,
+          texto: f.nota,
+        })),
+      ),
+    ]
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
+      .slice(0, OBSERVACIONES_LIMIT);
+
+    result.set(studentId, {
+      section: gradesData.section as Section,
+      student: studentGrades.student as Student,
+      periods: gradesData.periods as Period[],
+      grades: studentGrades as StudentGrades,
+      apoyos,
+      instrumentos,
+      observaciones,
+    });
+  }
+
+  return result;
+}
+
 export type SendInformeResult = { success?: boolean; error?: string };
 
 function informeEmailHtml(input: { studentFullName: string; sectionLabel: string }) {
