@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createSupportRecord } from "@/lib/actions/support-records";
 import { TIPOS_APOYO_SUGERIDOS } from "@/lib/support-types";
+import { StudentCheckboxSelect } from "@/components/student-checkbox-select";
 import type { Period, Student } from "@/lib/types";
 
 export default async function NuevoApoyoPage({
@@ -43,17 +44,7 @@ export default async function NuevoApoyoPage({
       <form action={createForSection} className="mt-6 flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-zinc-700">Estudiante(s)</label>
-          <div className="mt-1 max-h-48 overflow-y-auto rounded-md border border-zinc-300 p-2">
-            {studentList.map((s) => (
-              <label key={s.id} className="flex items-center gap-2 py-1 text-sm text-zinc-700">
-                <input type="checkbox" name="student_id" value={s.id} className="rounded" />
-                {s.primer_apellido} {s.segundo_apellido} {s.nombre}
-              </label>
-            ))}
-            {studentList.length === 0 && (
-              <p className="px-1 py-1 text-xs text-zinc-400">No hay estudiantes activos.</p>
-            )}
-          </div>
+          <StudentCheckboxSelect students={studentList} />
         </div>
 
         <div>
