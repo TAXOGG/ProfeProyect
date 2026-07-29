@@ -8,10 +8,12 @@ export function ObservationPicker({
   observations,
   context,
   onInsert,
+  label = "Insertar observación guardada",
 }: {
   observations: ObservationTemplate[];
   context: ObservationContext;
   onInsert: (text: string) => void;
+  label?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function ObservationPicker({
         onClick={() => setOpen((v) => !v)}
         className="text-xs font-medium text-teal-700 hover:underline"
       >
-        Insertar observación guardada
+        {label}
       </button>
 
       {open && (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createInstrument } from "@/lib/actions/instruments";
 import { TIPO_LABEL } from "@/lib/instrument-labels";
+import { HelpTooltip } from "@/components/help-tooltip";
 
 export default function NuevoInstrumentoPage() {
   return (
@@ -26,7 +27,18 @@ export default function NuevoInstrumentoPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700">Tipo de instrumento</label>
+          <label className="flex items-center text-sm font-medium text-zinc-700">
+            Tipo de instrumento
+            <HelpTooltip
+              text={
+                "Rúbrica analítica: califica varios criterios por separado, cada uno con sus propios niveles (ej. Contenido, Ortografía, Presentación).\n\n" +
+                "Rúbrica holística: un solo puntaje general de desempeño, sin separar por criterio.\n\n" +
+                "Lista de cotejo: por cada criterio solo marcás si Cumple o No cumple.\n\n" +
+                "Escala de valoración: por cada criterio elegís un nivel de frecuencia o calidad (ej. Siempre / A veces / Nunca).\n\n" +
+                "Registro anecdótico: no genera nota — solo un espacio para anotar lo observado."
+              }
+            />
+          </label>
           <select
             name="tipo"
             required

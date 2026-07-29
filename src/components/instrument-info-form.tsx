@@ -69,6 +69,7 @@ export function InstrumentInfoForm({ instrument }: { instrument: Instrument }) {
           <textarea
             name="instrucciones"
             rows={2}
+            defaultValue={instrument.instrucciones ?? ""}
             placeholder="Ej: leer en voz alta cada criterio antes de calificar"
             className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400"
           />

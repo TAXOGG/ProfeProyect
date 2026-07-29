@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { resolveObservationText } from "@/lib/observation-variables";
 import { STARTER_TEXT, TIPO_LABEL, MEDIO_LABEL } from "@/lib/communication-labels";
 import { ObservationPicker } from "@/components/observation-picker";
+import { HelpTooltip } from "@/components/help-tooltip";
 import type {
   ComunicacionMedio,
   ComunicacionTipo,
@@ -64,6 +65,12 @@ export function ComunicacionForm({
   );
 
   function useStarterTemplate() {
+    if (
+      mensaje.trim() &&
+      !window.confirm("Esto reemplaza el mensaje que ya escribiste. ¿Continuar?")
+    ) {
+      return;
+    }
     const { resolved, missing } = resolveObservationText(STARTER_TEXT[tipo], {
       nombre_estudiante: student ? studentName(student) : undefined,
       grupo: sectionLabel,
@@ -157,7 +164,10 @@ export function ComunicacionForm({
 
       <div>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <label className="block text-sm font-medium text-zinc-700">Mensaje</label>
+          <label className="flex items-center text-sm font-medium text-zinc-700">
+            Mensaje
+            <HelpTooltip text="'Usar plantilla inicial' reemplaza todo el mensaje por un texto de partida según el tipo elegido. 'Insertar texto guardado' agrega, al final, una de tus observaciones o plantillas de comunicación guardadas — no borra lo que ya escribiste." />
+          </label>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -168,6 +178,7 @@ export function ComunicacionForm({
             </button>
             <ObservationPicker
               observations={insertableTemplates}
+              label="Insertar texto guardado"
               context={{
                 nombre_estudiante: student ? studentName(student) : undefined,
                 grupo: sectionLabel,
@@ -204,6 +215,7 @@ export function ComunicacionForm({
           className="rounded"
         />
         Adjuntar el informe integral del estudiante
+        <HelpTooltip text="El informe integral incluye calificaciones por periodo, instrumentos de evaluación aplicados, registros de apoyo y las observaciones más recientes. Si el medio es correo, se adjunta en el envío; para el resto de medios, lo descargás para entregarlo aparte." />
       </label>
 
       <form action={action} className="contents">

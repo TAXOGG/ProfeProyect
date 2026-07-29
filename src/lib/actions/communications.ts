@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { buildInformeIntegralData } from "@/lib/actions/informe";
 import { renderInformeIntegralPdf } from "@/lib/pdf/informe-integral";
 import { sendEmail, LOGO_URL } from "@/lib/email";
-import { TIPO_LABEL } from "@/lib/communication-labels";
+import { TIPO_LABEL, medioConfirmable } from "@/lib/communication-labels";
 import type { ComunicacionMedio, ComunicacionTipo } from "@/lib/types";
 
 const TIPOS: ComunicacionTipo[] = [
@@ -203,7 +203,7 @@ export async function sendComunicacionCorreo(
     .eq("id", comunicacionId)
     .single();
   if (!comunicacion) return { error: "No se encontró la comunicación." };
-  if (comunicacion.medio !== "correo") {
+  if (!medioConfirmable(comunicacion.medio as ComunicacionMedio)) {
     return { error: "Esta comunicación no está configurada para envío por correo." };
   }
   if (comunicacion.estado !== "preparada") {

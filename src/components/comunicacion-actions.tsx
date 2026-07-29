@@ -9,6 +9,7 @@ import {
   sendComunicacionCorreo,
 } from "@/lib/actions/communications";
 import { ConfirmModal } from "@/components/confirm-modal";
+import { medioConfirmable } from "@/lib/communication-labels";
 import type { Communication } from "@/lib/types";
 
 function isRedirectError(error: unknown): boolean {
@@ -82,13 +83,13 @@ export function ComunicacionActions({
     <div className="rounded-lg border border-zinc-200 bg-white p-4">
       <h3 className="text-sm font-semibold text-zinc-900">Registrar comunicación</h3>
       <p className="mt-1 text-xs text-zinc-500">
-        {comunicacion.medio === "correo"
+        {medioConfirmable(comunicacion.medio)
           ? "Al enviar por correo, ARCE confirma el envío y actualiza el estado automáticamente."
           : "Este medio no puede confirmarse desde ARCE — registrá manualmente cuando ya la hayas realizado."}
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        {comunicacion.medio === "correo" ? (
+        {medioConfirmable(comunicacion.medio) ? (
           hasEmail ? (
             sent ? (
               <span className="inline-flex items-center gap-1 rounded border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">

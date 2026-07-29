@@ -33,7 +33,7 @@ export function HelpTooltip({ text }: { text: string }) {
         </svg>
       </button>
       {open && (
-        <div className="absolute left-1/2 top-full z-20 mt-2 w-72 -translate-x-1/2 rounded-md border border-zinc-200 bg-white p-3 text-sm leading-relaxed text-zinc-700 shadow-lg">
+        <div className="absolute left-1/2 top-full z-20 mt-2 w-72 -translate-x-1/2 whitespace-pre-line rounded-md border border-zinc-200 bg-white p-3 text-sm leading-relaxed text-zinc-700 shadow-lg">
           {text}
           <span className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t border-zinc-200 bg-white" />
         </div>

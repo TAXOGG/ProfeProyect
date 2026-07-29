@@ -10,6 +10,7 @@ import {
   deleteNivel,
 } from "@/lib/actions/instruments";
 import { ConfirmModal } from "@/components/confirm-modal";
+import { HelpTooltip } from "@/components/help-tooltip";
 import type { InstrumentCriterio, InstrumentNivel, InstrumentTipo } from "@/lib/types";
 
 const NIVEL_PLACEHOLDER: Partial<Record<InstrumentTipo, { nombre: string; puntaje: number }>> = {
@@ -214,7 +215,12 @@ export function InstrumentBuilder({
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-5">
-      <h3 className="text-sm font-semibold text-zinc-900">{titulo}</h3>
+      <h3 className="flex items-center text-sm font-semibold text-zinc-900">
+        {titulo}
+        {holistica && (
+          <HelpTooltip text="La rúbrica holística califica el desempeño general del estudiante con un solo puntaje, no criterio por criterio — por eso acá solo definís los niveles (ej. Excelente, Bueno, Regular) y su puntaje, sin una lista de criterios separada." />
+        )}
+      </h3>
 
       {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
