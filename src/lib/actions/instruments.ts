@@ -415,7 +415,10 @@ export async function applyInstrument(instrumentId: string, formData: FormData) 
           numero: (count ?? 0) + 1,
           nombre: instrument.nombre,
           puntos_max: total,
-          porcentaje_relativo: 1,
+          // 0 por defecto: si ya hay otras pruebas en el periodo, un peso de
+          // 1 aquí sumaría más de 100% y falsearía la nota del rubro. El
+          // profesor debe asignar el peso real desde Pruebas.
+          porcentaje_relativo: 0,
         })
         .select("id")
         .single();

@@ -96,8 +96,8 @@ export function ApplyInstrumentForm({
           </select>
           <p className="mt-1 text-xs text-zinc-400">
             Se crea automáticamente con el nombre del instrumento, en la misma escala de puntos.
-            Si es una Prueba y ya tenés otras en el periodo, después ajustá los pesos desde
-            Pruebas para que sumen 100%.
+            {" "}Si es una Prueba, se crea con peso 0% — andá a Pruebas después de aplicar y
+            asignale el peso real para que cuente en la nota del periodo.
           </p>
         </div>
       )}
