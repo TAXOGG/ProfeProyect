@@ -22,6 +22,7 @@ export const TABLE_LABEL: Record<string, string> = {
   instrument_results: "Instrumento aplicado",
   support_records: "Apoyo",
   student_photos: "Evidencia",
+  communications: "Comunicación",
 };
 
 // Campos que no aportan nada útil en el resumen (ids técnicos, llaves

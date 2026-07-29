@@ -270,3 +270,34 @@ export type SupportRecordFollowup = {
   created_by: string | null;
   created_at: string;
 };
+
+export type ComunicacionTipo =
+  | "progreso"
+  | "ausencia"
+  | "trabajo_pendiente"
+  | "convocatoria"
+  | "reconocimiento"
+  | "seguimiento"
+  | "personalizada";
+
+export type ComunicacionMedio = "correo" | "llamada" | "reunion" | "mensajeria" | "impresa" | "otro";
+
+export type ComunicacionEstado = "preparada" | "enviada" | "registrada_manualmente";
+
+export type Communication = {
+  id: string;
+  student_id: string;
+  section_id: string;
+  period_id: string | null;
+  tipo: ComunicacionTipo;
+  medio: ComunicacionMedio;
+  destinatario: string | null;
+  mensaje: string;
+  adjunta_informe: boolean;
+  estado: ComunicacionEstado;
+  fecha_realizada: string | null;
+  observacion: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};

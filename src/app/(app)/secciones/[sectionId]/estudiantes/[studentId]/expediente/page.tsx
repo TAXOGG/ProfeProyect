@@ -5,7 +5,9 @@ import { TIPO_LABEL } from "@/lib/instrument-labels";
 import { TABLE_LABEL, summarizeAuditEntry, type AuditEntry } from "@/lib/audit";
 import { PhotoGallery } from "@/components/photo-gallery";
 import { SendInformeButton } from "@/components/send-informe-button";
+import { TIPO_LABEL as COMUNICACION_TIPO_LABEL, ESTADO_LABEL as COMUNICACION_ESTADO_LABEL, ESTADO_BADGE as COMUNICACION_ESTADO_BADGE } from "@/lib/communication-labels";
 import type {
+  Communication,
   InstrumentResult,
   InstrumentTipo,
   Section,
@@ -46,6 +48,7 @@ export default async function ExpedientePage({
     { data: instrumentResults },
     { data: supportRecords },
     { data: photos },
+    { data: communications },
     { data: auditEntries },
   ] = await Promise.all([
     fetchSectionGradesData(sectionId, studentId),
@@ -65,6 +68,12 @@ export default async function ExpedientePage({
       .eq("student_id", studentId)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("communications")
+      .select("*")
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false })
+      .limit(10),
     supabase
       .from("audit_log")
       .select("*")
@@ -365,11 +374,44 @@ export default async function ExpedientePage({
         </div>
       </div>
 
-      {/* Comunicaciones — todavía no existe como módulo */}
-      <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-5 text-center text-sm text-zinc-400">
-        El centro de comunicaciones todavía no está disponible como módulo — queda pendiente de
-        una próxima fase. El informe integral (arriba) ya se puede descargar o enviar por correo.
+      {/* Comunicaciones */}
+      <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-900">Comunicaciones</h2>
+          <Link
+            href={`/secciones/${sectionId}/comunicaciones/nueva?student=${studentId}`}
+            className="text-xs font-medium text-teal-700 hover:underline"
+          >
+            + Nueva
+          </Link>
+        </div>
+        <div className="mt-2 flex flex-col gap-2">
+          {(communications as Communication[] | null)?.map((c) => (
+            <Link
+              key={c.id}
+              href={`/secciones/${sectionId}/comunicaciones/${c.id}`}
+              className="flex items-center justify-between rounded-md bg-zinc-50 px-3 py-2 text-sm hover:bg-zinc-100"
+            >
+              <div>
+                <p className="font-medium text-zinc-800">{COMUNICACION_TIPO_LABEL[c.tipo]}</p>
+                <p className="text-xs text-zinc-400">
+                  {c.fecha_realizada ?? c.created_at.slice(0, 10)}
+                </p>
+              </div>
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${COMUNICACION_ESTADO_BADGE[c.estado]}`}
+              >
+                {COMUNICACION_ESTADO_LABEL[c.estado]}
+              </span>
+            </Link>
+          ))}
+          {(!communications || communications.length === 0) && (
+            <p className="text-xs text-zinc-400">No hay comunicaciones registradas todavía.</p>
+          )}
+        </div>
       </div>
+
+      {/* Informes — el informe integral ya se puede descargar o enviar arriba */}
 
       {/* Historial */}
       <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-5">
