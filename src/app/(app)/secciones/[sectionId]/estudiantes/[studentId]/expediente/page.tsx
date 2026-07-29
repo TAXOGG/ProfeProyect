@@ -4,6 +4,7 @@ import { fetchSectionGradesData } from "@/lib/section-grades-data";
 import { TIPO_LABEL } from "@/lib/instrument-labels";
 import { TABLE_LABEL, summarizeAuditEntry, type AuditEntry } from "@/lib/audit";
 import { PhotoGallery } from "@/components/photo-gallery";
+import { SendInformeButton } from "@/components/send-informe-button";
 import type {
   InstrumentResult,
   InstrumentTipo,
@@ -152,8 +153,25 @@ export default async function ExpedientePage({
       >
         ← Volver a Estudiantes
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold text-zinc-900">{studentName(s)}</h1>
-      <p className="mt-1 text-sm text-zinc-500">Expediente pedagógico</p>
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-900">{studentName(s)}</h1>
+          <p className="mt-1 text-sm text-zinc-500">Expediente pedagógico</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/secciones/${sectionId}/estudiantes/${studentId}/informe`}
+            className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+          >
+            Descargar informe
+          </a>
+          <SendInformeButton
+            sectionId={sectionId}
+            studentId={studentId}
+            hasEmail={!!s.contacto_correo}
+          />
+        </div>
+      </div>
 
       {/* Resumen */}
       <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-5">
@@ -347,10 +365,10 @@ export default async function ExpedientePage({
         </div>
       </div>
 
-      {/* Informes y comunicaciones — todavía no existen como módulos */}
+      {/* Comunicaciones — todavía no existe como módulo */}
       <div className="mt-6 rounded-lg border border-dashed border-zinc-300 p-5 text-center text-sm text-zinc-400">
-        Informes y Comunicaciones todavía no están disponibles como módulos — quedan pendientes de
-        una próxima fase.
+        El centro de comunicaciones todavía no está disponible como módulo — queda pendiente de
+        una próxima fase. El informe integral (arriba) ya se puede descargar o enviar por correo.
       </div>
 
       {/* Historial */}
