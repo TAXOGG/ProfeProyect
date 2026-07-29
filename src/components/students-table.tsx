@@ -74,6 +74,7 @@ export function StudentsTable({
               <th className="px-4 py-2">Estado</th>
               <th className="px-4 py-2">Contacto</th>
               <th className="px-4 py-2">Fotos</th>
+              <th className="px-4 py-2">Expediente</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100">
@@ -118,11 +119,19 @@ export function StudentsTable({
                     Ver fotos
                   </Link>
                 </td>
+                <td className="px-4 py-2">
+                  <Link
+                    href={`/secciones/${sectionId}/estudiantes/${s.id}/expediente`}
+                    className="text-xs font-medium text-teal-700 hover:underline"
+                  >
+                    Ver expediente
+                  </Link>
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-6 text-center text-zinc-400">
+                <td colSpan={9} className="px-4 py-6 text-center text-zinc-400">
                   {students.length === 0
                     ? "Aún no hay estudiantes en esta sección."
                     : "Ningún estudiante coincide con la búsqueda."}
