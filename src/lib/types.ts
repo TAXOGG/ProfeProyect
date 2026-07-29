@@ -262,6 +262,11 @@ export type ObservationTemplate = {
   updated_at: string;
 };
 
+// Misma forma que ObservationTemplate a propósito: comparten el mismo
+// componente de selección (ObservationPicker) en el formulario de
+// comunicaciones.
+export type CommunicationTemplate = ObservationTemplate;
+
 export type SupportRecordFollowup = {
   id: string;
   support_record_id: string;

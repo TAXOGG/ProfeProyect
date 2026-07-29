@@ -172,6 +172,18 @@ export function Sidebar({
             Observaciones
           </Link>
 
+          <Link
+            href="/plantillas"
+            prefetch={false}
+            className={`block rounded-md px-3 py-2 text-sm ${
+              pathname.startsWith("/plantillas")
+                ? "bg-teal-700 text-white"
+                : "text-zinc-700 hover:bg-zinc-100"
+            }`}
+          >
+            Plantillas
+          </Link>
+
           {isAdmin && (
             <>
               <p className="px-3 pt-4 pb-1 text-xs font-medium uppercase tracking-wide text-zinc-400">

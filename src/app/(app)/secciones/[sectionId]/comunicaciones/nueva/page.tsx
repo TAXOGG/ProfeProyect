@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createComunicacion } from "@/lib/actions/communications";
 import { ComunicacionForm } from "@/components/comunicacion-form";
-import type { ObservationTemplate, Period, Student } from "@/lib/types";
+import type { CommunicationTemplate, ObservationTemplate, Period, Student } from "@/lib/types";
 
 export default async function NuevaComunicacionPage({
   params,
@@ -17,7 +17,7 @@ export default async function NuevaComunicacionPage({
   const supabase = await createClient();
   const user = await getCurrentUser();
 
-  const [{ data: students }, { data: periods }, { data: section }, { data: observations }] =
+  const [{ data: students }, { data: periods }, { data: section }, { data: observations }, { data: communicationTemplates }] =
     await Promise.all([
       supabase
         .from("students")
@@ -31,6 +31,9 @@ export default async function NuevaComunicacionPage({
       user
         ? supabase.from("observation_templates").select("*").eq("owner_id", user.id).order("favorito", { ascending: false })
         : Promise.resolve({ data: [] as ObservationTemplate[] }),
+      user
+        ? supabase.from("communication_templates").select("*").eq("owner_id", user.id).order("favorito", { ascending: false })
+        : Promise.resolve({ data: [] as CommunicationTemplate[] }),
     ]);
 
   const studentList = (students as Student[]) ?? [];
@@ -64,6 +67,7 @@ export default async function NuevaComunicacionPage({
           action={createForSection}
           students={studentList}
           observations={(observations as ObservationTemplate[]) ?? []}
+          communicationTemplates={(communicationTemplates as CommunicationTemplate[]) ?? []}
           sectionLabel={sec ? `${sec.asignatura} — ${sec.nombre}` : ""}
           periodoLabel={periodList[0]?.nombre}
           initial={{ studentId: preselectedStudentId }}

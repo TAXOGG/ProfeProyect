@@ -4,7 +4,13 @@ import { useMemo, useState } from "react";
 import { resolveObservationText } from "@/lib/observation-variables";
 import { STARTER_TEXT, TIPO_LABEL, MEDIO_LABEL } from "@/lib/communication-labels";
 import { ObservationPicker } from "@/components/observation-picker";
-import type { ComunicacionMedio, ComunicacionTipo, ObservationTemplate, Student } from "@/lib/types";
+import type {
+  ComunicacionMedio,
+  ComunicacionTipo,
+  CommunicationTemplate,
+  ObservationTemplate,
+  Student,
+} from "@/lib/types";
 
 type StudentOption = Pick<Student, "id" | "primer_apellido" | "segundo_apellido" | "nombre" | "contacto_correo">;
 
@@ -19,6 +25,7 @@ export function ComunicacionForm({
   action,
   students,
   observations,
+  communicationTemplates,
   sectionLabel,
   periodoLabel,
   initial,
@@ -28,6 +35,7 @@ export function ComunicacionForm({
   action: (formData: FormData) => void;
   students: StudentOption[];
   observations: ObservationTemplate[];
+  communicationTemplates?: CommunicationTemplate[];
   sectionLabel: string;
   periodoLabel?: string;
   initial?: {
@@ -50,6 +58,10 @@ export function ComunicacionForm({
   const [templateNotice, setTemplateNotice] = useState<string | null>(null);
 
   const student = useMemo(() => students.find((s) => s.id === studentId), [students, studentId]);
+  const insertableTemplates = useMemo(
+    () => [...observations, ...(communicationTemplates ?? [])],
+    [observations, communicationTemplates],
+  );
 
   function useStarterTemplate() {
     const { resolved, missing } = resolveObservationText(STARTER_TEXT[tipo], {
@@ -155,7 +167,7 @@ export function ComunicacionForm({
               Usar plantilla inicial
             </button>
             <ObservationPicker
-              observations={observations}
+              observations={insertableTemplates}
               context={{
                 nombre_estudiante: student ? studentName(student) : undefined,
                 grupo: sectionLabel,

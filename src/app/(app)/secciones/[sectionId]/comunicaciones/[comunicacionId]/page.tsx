@@ -5,7 +5,7 @@ import { updateComunicacion } from "@/lib/actions/communications";
 import { ComunicacionForm } from "@/components/comunicacion-form";
 import { ComunicacionActions } from "@/components/comunicacion-actions";
 import { TIPO_LABEL, MEDIO_LABEL, ESTADO_LABEL, ESTADO_BADGE } from "@/lib/communication-labels";
-import type { Communication, ObservationTemplate, Period, Student } from "@/lib/types";
+import type { Communication, CommunicationTemplate, ObservationTemplate, Period, Student } from "@/lib/types";
 
 export default async function ComunicacionDetallePage({
   params,
@@ -31,7 +31,7 @@ export default async function ComunicacionDetallePage({
   }
   const comunicacion = comunicacionRow as Communication;
 
-  const [{ data: student }, { data: section }, { data: periods }, { data: observations }] =
+  const [{ data: student }, { data: section }, { data: periods }, { data: observations }, { data: communicationTemplates }] =
     await Promise.all([
       supabase.from("students").select("*").eq("id", comunicacion.student_id).single(),
       supabase.from("sections").select("nombre, asignatura").eq("id", sectionId).single(),
@@ -39,6 +39,9 @@ export default async function ComunicacionDetallePage({
       user
         ? supabase.from("observation_templates").select("*").eq("owner_id", user.id).order("favorito", { ascending: false })
         : Promise.resolve({ data: [] as ObservationTemplate[] }),
+      user
+        ? supabase.from("communication_templates").select("*").eq("owner_id", user.id).order("favorito", { ascending: false })
+        : Promise.resolve({ data: [] as CommunicationTemplate[] }),
     ]);
 
   const s = student as Student | null;
@@ -87,6 +90,7 @@ export default async function ComunicacionDetallePage({
             action={updateForComunicacion}
             students={s ? [s] : []}
             observations={(observations as ObservationTemplate[]) ?? []}
+            communicationTemplates={(communicationTemplates as CommunicationTemplate[]) ?? []}
             sectionLabel={sec ? `${sec.asignatura} — ${sec.nombre}` : ""}
             periodoLabel={periodList[0]?.nombre}
             initial={{
