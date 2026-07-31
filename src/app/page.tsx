@@ -461,68 +461,63 @@ export default async function HomePage() {
         </Link>
       </header>
 
-      {/* HERO — bloque redondeado de color, tipografía pesada, tarjeta flotando encima */}
-      <section className="px-5 pt-4 pb-10 sm:px-8 sm:pb-16">
+      {/* HERO — banda de color a ancho completo, tipografía pesada, tarjeta flotando encima */}
+      <section className="relative overflow-hidden px-5 py-14 sm:px-8 sm:py-20" style={{ backgroundColor: TEAL }}>
+        <div className="pointer-events-none absolute inset-0" style={MESH_BG} aria-hidden />
         <div
-          className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] px-6 py-14 sm:rounded-[2.5rem] sm:px-14 sm:py-20"
-          style={{ backgroundColor: TEAL }}
-        >
-          <div className="pointer-events-none absolute inset-0" style={MESH_BG} aria-hidden />
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.06]"
-            style={{
-              backgroundImage:
-                "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
-            aria-hidden
-          />
-          <div className="relative grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-8">
-            <div>
-              <p
-                className="arce-reveal arce-d1 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-[family-name:var(--font-mono)] text-xs font-medium uppercase tracking-[0.08em] text-white"
-                style={{ backgroundColor: "rgba(255,255,255,0.14)", border: `1px solid ${LINE_ON_TEAL}` }}
+          className="pointer-events-none absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+          aria-hidden
+        />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-8">
+          <div>
+            <p
+              className="arce-reveal arce-d1 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-[family-name:var(--font-mono)] text-xs font-medium uppercase tracking-[0.08em] text-white"
+              style={{ backgroundColor: "rgba(255,255,255,0.14)", border: `1px solid ${LINE_ON_TEAL}` }}
+            >
+              Para docentes de Costa Rica
+            </p>
+            <h1 className="arce-reveal arce-d2 mt-5 font-[family-name:var(--font-display)] text-[2.6rem] font-extrabold leading-[1.04] tracking-tight text-white sm:text-6xl lg:text-[4rem]">
+              Registrá una vez.
+              <br />
+              ARCE hace el resto.
+            </h1>
+            <p className="arce-reveal arce-d3 mt-5 max-w-md text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.88)" }}>
+              Notas, asistencia, instrumentos de evaluación, apoyos educativos e informes para
+              encargados, todo en un solo lugar. Pensado para cómo trabajás de verdad, en un aula
+              de Costa Rica.
+            </p>
+            <div className="arce-reveal arce-d4 mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href={primaryHref}
+                className="arce-btn rounded-full px-6 py-3.5 text-sm font-semibold shadow-md"
+                style={{ backgroundColor: WHITE, color: TEAL_DEEP }}
               >
-                Para docentes de Costa Rica
-              </p>
-              <h1 className="arce-reveal arce-d2 mt-5 font-[family-name:var(--font-display)] text-[2.6rem] font-extrabold leading-[1.04] tracking-tight text-white sm:text-6xl lg:text-[4rem]">
-                Registrá una vez.
-                <br />
-                ARCE hace el resto.
-              </h1>
-              <p className="arce-reveal arce-d3 mt-5 max-w-md text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.88)" }}>
-                Notas, asistencia, instrumentos de evaluación, apoyos educativos e informes para
-                encargados, todo en un solo lugar. Pensado para cómo trabajás de verdad, en un aula
-                de Costa Rica.
-              </p>
-              <div className="arce-reveal arce-d4 mt-8 flex flex-wrap items-center gap-3">
+                {primaryLabel}
+              </Link>
+              {!user && (
                 <Link
-                  href={primaryHref}
-                  className="arce-btn rounded-full px-6 py-3.5 text-sm font-semibold shadow-md"
-                  style={{ backgroundColor: WHITE, color: TEAL_DEEP }}
+                  href="/solicitar-acceso"
+                  className="arce-btn rounded-full border px-6 py-3.5 text-sm font-semibold text-white"
+                  style={{ borderColor: "rgba(255,255,255,0.45)" }}
                 >
-                  {primaryLabel}
+                  Solicitar acceso
                 </Link>
-                {!user && (
-                  <Link
-                    href="/solicitar-acceso"
-                    className="arce-btn rounded-full border px-6 py-3.5 text-sm font-semibold text-white"
-                    style={{ borderColor: "rgba(255,255,255,0.45)" }}
-                  >
-                    Solicitar acceso
-                  </Link>
-                )}
-              </div>
-              <div className="arce-reveal arce-d4 mt-6 flex flex-wrap gap-x-5 gap-y-2 font-[family-name:var(--font-mono)] text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
-                <span>🇨🇷 Hecho para el MEP</span>
-                <span>📶 Funciona sin internet</span>
-                <span>🔒 Datos privados de tus estudiantes</span>
-              </div>
+              )}
             </div>
+            <div className="arce-reveal arce-d4 mt-6 flex flex-wrap gap-x-5 gap-y-2 font-[family-name:var(--font-mono)] text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
+              <span>🇨🇷 Hecho para el MEP</span>
+              <span>📶 Funciona sin internet</span>
+              <span>🔒 Datos privados de tus estudiantes</span>
+            </div>
+          </div>
 
-            <div className="arce-reveal arce-d3 relative flex justify-center lg:justify-end">
-              <HeroVisual />
-            </div>
+          <div className="arce-reveal arce-d3 relative flex justify-center lg:justify-end">
+            <HeroVisual />
           </div>
         </div>
       </section>
