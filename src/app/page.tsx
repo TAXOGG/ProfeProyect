@@ -477,7 +477,7 @@ export default async function HomePage() {
             }}
             aria-hidden
           />
-          <div className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative grid items-center gap-12 lg:grid-cols-[1fr_1.05fr] lg:gap-8">
             <div>
               <p
                 className="arce-reveal arce-d1 inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-[family-name:var(--font-mono)] text-xs font-medium uppercase tracking-[0.08em] text-white"
@@ -520,8 +520,8 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <div className="arce-reveal arce-d3 flex justify-center lg:justify-end">
-              <ProductWindowMock />
+            <div className="arce-reveal arce-d3 relative flex justify-center lg:justify-end">
+              <HeroVisual />
             </div>
           </div>
         </div>
@@ -809,11 +809,55 @@ export default async function HomePage() {
   );
 }
 
+function HeroVisual() {
+  return (
+    <div className="relative w-full max-w-lg py-6 lg:py-10">
+      <div
+        className="absolute -left-3 bottom-2 hidden w-52 -rotate-6 rounded-xl border bg-white p-3.5 shadow-xl sm:block lg:-left-8 lg:bottom-6"
+        style={{ borderColor: LINE }}
+        aria-hidden
+      >
+        <span
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm"
+          style={{ color: MOD.asistencia, backgroundColor: `${MOD.asistencia}18` }}
+        >
+          ⚠
+        </span>
+        <p className="mt-2 text-xs font-semibold leading-snug" style={{ color: INK }}>
+          2 estudiantes con asistencia baja
+        </p>
+        <p className="mt-0.5 font-[family-name:var(--font-mono)] text-[10px]" style={{ color: INK_MUTED }}>
+          Alerta automática
+        </p>
+      </div>
+
+      <div
+        className="absolute -right-3 -top-3 hidden w-44 rotate-3 rounded-xl border bg-white p-3 shadow-xl md:block lg:-right-6 lg:-top-6"
+        style={{ borderColor: LINE }}
+        aria-hidden
+      >
+        <span
+          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm"
+          style={{ color: TEAL, backgroundColor: "rgba(15,118,110,0.1)" }}
+        >
+          ✓
+        </span>
+        <p className="mt-2 text-xs font-semibold leading-snug" style={{ color: INK }}>
+          Nota final calculada sola
+        </p>
+      </div>
+
+      <ProductWindowMock />
+    </div>
+  );
+}
+
 function ProductWindowMock() {
   const students = [
     { name: "Araica Bermudez S.", cot: 90, tar: 95, prue: 85, proy: 100, asis: 98 },
     { name: "Brenes Duran S.", cot: 75, tar: 80, prue: 70, proy: 90, asis: 92 },
     { name: "Briceño Guardado B.", cot: 100, tar: 100, prue: 95, proy: 100, asis: 100 },
+    { name: "Castro Vindas L.", cot: 88, tar: 92, prue: 80, proy: 95, asis: 96 },
   ];
   const modules: { key: keyof (typeof students)[number]; label: string; color: string }[] = [
     { key: "cot", label: "COT", color: MOD.cotidiano },
@@ -824,7 +868,7 @@ function ProductWindowMock() {
   ];
 
   return (
-    <div className="w-full max-w-md overflow-hidden rounded-2xl border shadow-2xl" style={{ borderColor: LINE, backgroundColor: WHITE }}>
+    <div className="relative w-full overflow-hidden rounded-2xl border shadow-2xl" style={{ borderColor: LINE, backgroundColor: WHITE }}>
       {/* chrome bar */}
       <div className="flex items-center gap-2 border-b px-3 py-2.5" style={{ borderColor: LINE, backgroundColor: CREAM }}>
         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#e4b866" }} />
