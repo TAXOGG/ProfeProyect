@@ -380,7 +380,7 @@ const STEPS: Step[] = [
   { icon: IconSend, titulo: "Compartís con un clic", texto: "Informe directo al encargado" },
 ];
 
-const PRECIO_FUNDADOR = "19.900";
+const PRECIO_FUNDADOR = "10.000";
 const PRECIO_REGULAR = "25.000";
 
 export default async function HomePage() {
@@ -416,7 +416,7 @@ export default async function HomePage() {
             audience: { "@type": "Audience", audienceType: "Docentes" },
             offers: {
               "@type": "Offer",
-              price: "19900",
+              price: "10000",
               priceCurrency: "CRC",
               priceValidUntil: "2027-12-31",
               availability: "https://schema.org/InStock",
