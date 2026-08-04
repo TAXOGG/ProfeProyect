@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import QRCode from "qrcode";
 import { Bricolage_Grotesque, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -386,6 +387,12 @@ export default async function HomePage() {
   const user = await getCurrentUser().catch(() => null);
   const primaryHref = user ? "/dashboard" : "/login";
   const primaryLabel = user ? "Ir a mi panel" : "Iniciar sesión";
+  const qrCodeSvg = await QRCode.toString("https://arcecr.com", {
+    type: "svg",
+    margin: 0,
+    width: 104,
+    color: { dark: INK, light: "#ffffff" },
+  });
 
   return (
     <div
@@ -787,6 +794,13 @@ export default async function HomePage() {
                 Solicitar acceso
               </Link>
             )}
+          </div>
+
+          <div className="mt-9 inline-flex flex-col items-center gap-2 rounded-2xl bg-white p-3.5 shadow-lg">
+            <div className="h-[104px] w-[104px]" dangerouslySetInnerHTML={{ __html: qrCodeSvg }} />
+            <p className="max-w-[130px] font-[family-name:var(--font-mono)] text-[10px] font-medium leading-tight" style={{ color: INK_MUTED }}>
+              Escaneá para compartirlo con un colega
+            </p>
           </div>
         </div>
       </section>
