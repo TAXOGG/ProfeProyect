@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { AdminUsersTable, type AdminUserRow } from "@/components/admin-users-table";
 
 export default async function AdminUsuariosPage() {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const adminClient = createAdminClient();
 
   const [{ data: authData, error: authError }, { data: profiles, error: profilesError }] =
@@ -57,7 +57,7 @@ export default async function AdminUsuariosPage() {
         Hacé clic en un nombre para editarlo.
       </p>
 
-      <AdminUsersTable rows={rows} />
+      <AdminUsersTable rows={rows} currentUserId={admin.id} />
     </div>
   );
 }

@@ -14,7 +14,13 @@ export type AdminUserRow = {
   lastSignInAt: string | null;
 };
 
-export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
+export function AdminUsersTable({
+  rows,
+  currentUserId,
+}: {
+  rows: AdminUserRow[];
+  currentUserId: string;
+}) {
   const [editUser, setEditUser] = useState<AdminUserRow | null>(null);
 
   return (
@@ -67,7 +73,12 @@ export function AdminUsersTable({ rows }: { rows: AdminUserRow[] }) {
       </div>
 
       {editUser && (
-        <AdminUserEditModal user={editUser} open={!!editUser} onClose={() => setEditUser(null)} />
+        <AdminUserEditModal
+          user={editUser}
+          currentUserId={currentUserId}
+          open={!!editUser}
+          onClose={() => setEditUser(null)}
+        />
       )}
     </>
   );

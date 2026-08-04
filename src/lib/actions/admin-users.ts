@@ -102,6 +102,51 @@ export async function createTeacherAccount(formData: FormData) {
   redirect("/admin/nuevo-usuario?creado=1");
 }
 
+export type UserDeletionImpact = { sectionsCount: number; studentsCount: number };
+
+// Se consulta antes de mostrar la confirmación, para que el admin vea el
+// alcance real (secciones y estudiantes) en vez de un mensaje genérico —
+// borrar la cuenta de un docente arrastra en cascada todas sus secciones,
+// estudiantes, notas, asistencia, apoyos e informes (sin papelera: es un
+// borrado a nivel de base de datos, no el soft-delete que sí tienen los
+// estudiantes dentro de una sección).
+export async function getUserDeletionImpact(userId: string): Promise<UserDeletionImpact> {
+  await requireAdmin();
+  const adminClient = createAdminClient();
+
+  const { data: sections, error: sectionsError } = await adminClient
+    .from("sections")
+    .select("id")
+    .eq("teacher_id", userId);
+  if (sectionsError) throw new Error(sectionsError.message);
+
+  const sectionIds = (sections ?? []).map((s) => s.id as string);
+  let studentsCount = 0;
+  if (sectionIds.length > 0) {
+    const { count, error: studentsError } = await adminClient
+      .from("students")
+      .select("id", { count: "exact", head: true })
+      .in("section_id", sectionIds);
+    if (studentsError) throw new Error(studentsError.message);
+    studentsCount = count ?? 0;
+  }
+
+  return { sectionsCount: sectionIds.length, studentsCount };
+}
+
+export async function deleteUserAccount(userId: string) {
+  const admin = await requireAdmin();
+  if (admin.id === userId) {
+    throw new Error("No podés eliminar tu propia cuenta de administrador.");
+  }
+
+  const adminClient = createAdminClient();
+  const { error } = await adminClient.auth.admin.deleteUser(userId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/usuarios");
+}
+
 export async function updateUserProfile(userId: string, formData: FormData) {
   await requireAdmin();
 
