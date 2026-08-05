@@ -9,7 +9,11 @@ import { db } from "@/lib/offline/db";
 import { enqueueAction, pullAsistenciaData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
 import { SendRubroReportButton } from "@/components/send-rubro-report-button";
-import { calcularNotaAsistencia, type AsistenciaMetodo } from "@/lib/attendance-grade";
+import {
+  calcularNotaAsistencia,
+  ausenciasConTardanzas,
+  type AsistenciaMetodo,
+} from "@/lib/attendance-grade";
 import type { AttendanceRecord, AttendanceSession, Student } from "@/lib/types";
 
 type Pending = { sessionId: string; studentId: string; raw: string; lecciones: number };
@@ -52,6 +56,7 @@ export function AttendanceGrid({
   advertenciaPct,
   limitePct,
   asistenciaMetodo = "lineal",
+  tardanzasPorAusencia,
 }: {
   sectionId: string;
   students: Student[];
@@ -61,6 +66,7 @@ export function AttendanceGrid({
   advertenciaPct?: number | null;
   limitePct?: number | null;
   asistenciaMetodo?: AsistenciaMetodo;
+  tardanzasPorAusencia?: number | null;
 }) {
   const [isPending, startTransition] = useTransition();
   const [values, setValues] = useState<Record<string, string>>(() => {
@@ -299,11 +305,20 @@ export function AttendanceGrid({
           </thead>
           <tbody className="divide-y divide-zinc-100">
             {students.map((s) => {
-              const ausenciasEfectivas = sessions.reduce((sum, session) => {
+              const ausenciasInjustificadas = sessions.reduce((sum, session) => {
                 const raw = getValue(session.id, s.id);
                 const parsed = parseAttendanceInput(raw);
                 return sum + (parsed.justificada ? 0 : parsed.ausencias);
               }, 0);
+              const cantidadTardanzas = sessions.reduce((sum, session) => {
+                const raw = getValue(session.id, s.id);
+                return parseAttendanceInput(raw).tardia ? sum + 1 : sum;
+              }, 0);
+              const ausenciasEfectivas = ausenciasConTardanzas(
+                ausenciasInjustificadas,
+                cantidadTardanzas,
+                tardanzasPorAusencia,
+              );
               const ausenciasPct =
                 totalLecciones > 0 ? (ausenciasEfectivas / totalLecciones) * 100 : 0;
               const nota = calcularNotaAsistencia(ausenciasPct, asistenciaMetodo);

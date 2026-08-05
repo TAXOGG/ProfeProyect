@@ -25,3 +25,34 @@ export function calcularNotaAsistencia(ausenciasPct: number, metodo: AsistenciaM
   const tramo = MEP_TRAMOS.find((t) => ausenciasPct < t.menorQue);
   return tramo?.nota ?? 0;
 }
+
+// Regla oficial del MEP: cada N tardanzas acumuladas cuentan como 1 ausencia
+// injustificada adicional. tardanzasPorAusencia null/undefined desactiva la conversión
+// (comportamiento histórico, sin tocar nada para las secciones que no la configuraron).
+export function ausenciasConTardanzas(
+  ausenciasBase: number,
+  cantidadTardanzas: number,
+  tardanzasPorAusencia: number | null | undefined,
+): number {
+  if (!tardanzasPorAusencia || tardanzasPorAusencia < 1) return ausenciasBase;
+  return ausenciasBase + Math.floor(cantidadTardanzas / tardanzasPorAusencia);
+}
+
+// Fechas en las que un estudiante tuvo una ausencia injustificada — los indicadores de
+// Cotidiano aplicados esos días quedan excluidos del cálculo (ni suman en contra ni al
+// total posible), en vez de contarse como 0. Usado tanto en el cálculo de notas
+// (src/lib/grades.ts) como en la grilla de Cotidiano, para que muestren lo mismo.
+export function fechasAusenteInjustificado(
+  sessions: { id: string; fecha: string }[],
+  records: { session_id: string; student_id: string; justificada: boolean; ausencias: number }[],
+  studentId: string,
+): Set<string> {
+  const fechas = new Set<string>();
+  for (const session of sessions) {
+    const record = records.find(
+      (r) => r.session_id === session.id && r.student_id === studentId,
+    );
+    if (record && !record.justificada && record.ausencias > 0) fechas.add(session.fecha);
+  }
+  return fechas;
+}

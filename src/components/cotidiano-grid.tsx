@@ -10,6 +10,7 @@ import { db } from "@/lib/offline/db";
 import { enqueueAction, pullCotidianoData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
 import { SendRubroReportButton } from "@/components/send-rubro-report-button";
+import { fechasAusenteInjustificado } from "@/lib/attendance-grade";
 import type { CotidianoIndicator, CotidianoScore, Student } from "@/lib/types";
 
 export function CotidianoGrid({
@@ -19,6 +20,8 @@ export function CotidianoGrid({
   scores,
   cotidianoPct,
   tolerancePct,
+  attendanceSessions = [],
+  attendanceRecords = [],
 }: {
   sectionId: string;
   students: Student[];
@@ -26,6 +29,13 @@ export function CotidianoGrid({
   scores: CotidianoScore[];
   cotidianoPct: number;
   tolerancePct: number;
+  attendanceSessions?: { id: string; fecha: string }[];
+  attendanceRecords?: {
+    session_id: string;
+    student_id: string;
+    justificada: boolean;
+    ausencias: number;
+  }[];
 }) {
   const initialValues = Object.fromEntries(
     scores.map((s) => [`${s.indicator_id}:${s.student_id}`, s.puntaje]),
@@ -78,7 +88,6 @@ export function CotidianoGrid({
     onPersist,
   });
 
-  const puntosPosibles = indicators.reduce((sum, i) => sum + i.puntos_max, 0);
   const indicadorPendiente = pending
     ? indicators.find((i) => i.id === pending.itemId)
     : undefined;
@@ -148,11 +157,23 @@ export function CotidianoGrid({
         </thead>
         <tbody className="divide-y divide-zinc-100">
           {students.map((s) => {
-            const obtenidos = indicators.reduce(
+            const fechasAusente = fechasAusenteInjustificado(
+              attendanceSessions,
+              attendanceRecords,
+              s.id,
+            );
+            const indicadoresValidos = indicators.filter(
+              (i) => !i.fecha_aplicacion || !fechasAusente.has(i.fecha_aplicacion),
+            );
+            const puntosPosiblesFila = indicadoresValidos.reduce(
+              (sum, i) => sum + i.puntos_max,
+              0,
+            );
+            const obtenidos = indicadoresValidos.reduce(
               (sum, i) => sum + getValue(i.id, s.id),
               0,
             );
-            const nota = puntosPosibles > 0 ? (obtenidos * 100) / puntosPosibles : 0;
+            const nota = puntosPosiblesFila > 0 ? (obtenidos * 100) / puntosPosiblesFila : 0;
             const aporte = nota * cotidianoPct;
             return (
               <tr key={s.id}>
@@ -160,9 +181,23 @@ export function CotidianoGrid({
                   {s.primer_apellido} {s.segundo_apellido} {s.nombre}
                 </td>
                 {indicators.map((i) => {
+                  const excluido =
+                    !!i.fecha_aplicacion && fechasAusente.has(i.fecha_aplicacion);
                   const isSuspect =
                     pending?.itemId === i.id && pending.studentId === s.id;
                   const justSaved = isSaved(i.id, s.id);
+                  if (excluido) {
+                    return (
+                      <td key={i.id} className="px-2 py-1.5 text-center">
+                        <span
+                          className="text-xs font-medium text-zinc-400"
+                          title="No aplica: el estudiante estuvo ausente sin justificar ese día"
+                        >
+                          N/A
+                        </span>
+                      </td>
+                    );
+                  }
                   return (
                     <td key={i.id} className={`px-2 py-1.5 text-center ${color.cellBg}`}>
                       <input

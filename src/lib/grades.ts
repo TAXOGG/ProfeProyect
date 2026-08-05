@@ -13,7 +13,11 @@ import type {
   RubricConfig,
   Student,
 } from "@/lib/types";
-import { calcularNotaAsistencia } from "@/lib/attendance-grade";
+import {
+  calcularNotaAsistencia,
+  ausenciasConTardanzas,
+  fechasAusenteInjustificado,
+} from "@/lib/attendance-grade";
 
 export type PeriodGrades = {
   cotidiano: number;
@@ -72,7 +76,12 @@ export function computeSectionGrades(input: {
     const periodos: Record<string, PeriodGrades> = {};
 
     for (const period of periods) {
-      const indicators = cotidianoIndicators.filter((i) => i.period_id === period.id);
+      const sessions = attendanceSessions.filter((s) => s.period_id === period.id);
+      const fechasAusente = fechasAusenteInjustificado(sessions, attendanceRecords, student.id);
+
+      const indicators = cotidianoIndicators
+        .filter((i) => i.period_id === period.id)
+        .filter((i) => !i.fecha_aplicacion || !fechasAusente.has(i.fecha_aplicacion));
       const posiblesCotidiano = indicators.reduce((sum, i) => sum + i.puntos_max, 0);
       const obtenidosCotidiano = indicators.reduce((sum, i) => {
         const score = cotidianoScores.find(
@@ -112,15 +121,25 @@ export function computeSectionGrades(input: {
       }, 0);
       const proyecto = notaPorPuntos(obtenidosProyecto, posiblesProyecto);
 
-      const sessions = attendanceSessions.filter((s) => s.period_id === period.id);
       const totalLecciones = sessions.reduce((sum, s) => sum + s.lecciones_impartidas, 0);
-      const ausenciasEfectivas = sessions.reduce((sum, session) => {
+      const ausenciasInjustificadas = sessions.reduce((sum, session) => {
         const record = attendanceRecords.find(
           (r) => r.session_id === session.id && r.student_id === student.id,
         );
         if (!record || record.justificada) return sum;
         return sum + record.ausencias;
       }, 0);
+      const cantidadTardanzas = sessions.reduce((sum, session) => {
+        const record = attendanceRecords.find(
+          (r) => r.session_id === session.id && r.student_id === student.id,
+        );
+        return record?.tardia ? sum + 1 : sum;
+      }, 0);
+      const ausenciasEfectivas = ausenciasConTardanzas(
+        ausenciasInjustificadas,
+        cantidadTardanzas,
+        rubric.tardanzas_por_ausencia,
+      );
       const ausenciasPct = totalLecciones > 0 ? (ausenciasEfectivas / totalLecciones) * 100 : 0;
       const asistencia = calcularNotaAsistencia(ausenciasPct, rubric.asistencia_metodo);
 

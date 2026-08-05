@@ -30,6 +30,7 @@ export type RubricConfig = {
   asistencia_advertencia_pct: number | null;
   asistencia_limite_pct: number | null;
   asistencia_metodo: "lineal" | "mep";
+  tardanzas_por_ausencia: number | null;
 };
 
 export type SectionWithInstitution = Section & { institutionNombre: string };

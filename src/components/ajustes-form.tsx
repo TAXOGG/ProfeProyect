@@ -133,6 +133,20 @@ export function AjustesForm({
               />
             </div>
           </div>
+          <div className="mt-3">
+            <label className="block text-xs text-zinc-600">
+              Cantidad de tardanzas que generan una ausencia injustificada
+            </label>
+            <input
+              name="tardanzas_por_ausencia"
+              type="number"
+              step="1"
+              min={1}
+              defaultValue={rubric.tardanzas_por_ausencia ?? ""}
+              placeholder="Ej. 2 (dejalo vacío para no convertir tardanzas)"
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400 sm:max-w-xs"
+            />
+          </div>
         </div>
 
         <div className="mt-4 border-t border-zinc-100 pt-4">

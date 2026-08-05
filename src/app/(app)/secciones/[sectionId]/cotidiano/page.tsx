@@ -64,6 +64,18 @@ export default async function CotidianoPage({
     ? await supabase.from("cotidiano_scores").select("*").in("indicator_id", indicatorIds)
     : { data: [] as CotidianoScore[] };
 
+  const { data: attendanceSessions } = await supabase
+    .from("attendance_sessions")
+    .select("id, fecha")
+    .eq("period_id", currentPeriod.id);
+  const sessionIds = (attendanceSessions ?? []).map((s) => s.id);
+  const { data: attendanceRecords } = sessionIds.length
+    ? await supabase
+        .from("attendance_records")
+        .select("session_id, student_id, justificada, ausencias")
+        .in("session_id", sessionIds)
+    : { data: [] };
+
   const color = moduleColor("cotidiano");
 
   return (
@@ -103,6 +115,8 @@ export default async function CotidianoPage({
         scores={(scores as CotidianoScore[]) ?? []}
         cotidianoPct={(rubric as RubricConfig)?.cotidiano_pct ?? 0}
         tolerancePct={(rubric as RubricConfig)?.tolerancia_pct ?? 0.1}
+        attendanceSessions={attendanceSessions ?? []}
+        attendanceRecords={attendanceRecords ?? []}
       />
     </div>
   );

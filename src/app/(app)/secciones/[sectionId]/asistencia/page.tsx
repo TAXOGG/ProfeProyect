@@ -118,6 +118,7 @@ export default async function AsistenciaPage({
         advertenciaPct={advertenciaPct}
         limitePct={limitePct}
         asistenciaMetodo={rubricConfig?.asistencia_metodo ?? "lineal"}
+        tardanzasPorAusencia={rubricConfig?.tardanzas_por_ausencia}
       />
     </div>
   );

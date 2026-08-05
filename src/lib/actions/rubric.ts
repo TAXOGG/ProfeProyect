@@ -36,6 +36,15 @@ export async function updateRubric(sectionId: string, formData: FormData) {
     throw new Error("El % de advertencia (amarillo) no puede ser mayor que el % límite (rojo)");
   }
 
+  const tardanzasRaw = String(formData.get("tardanzas_por_ausencia") ?? "").trim();
+  const tardanzasPorAusencia = tardanzasRaw ? Number(tardanzasRaw) : null;
+  if (
+    tardanzasPorAusencia !== null &&
+    (!Number.isInteger(tardanzasPorAusencia) || tardanzasPorAusencia < 1)
+  ) {
+    throw new Error("La cantidad de tardanzas debe ser un número entero de al menos 1");
+  }
+
   const total = cotidiano + tareas + asistencia + proyecto + pruebas;
   if (Math.abs(total - 1) > 0.001) {
     throw new Error(`Los porcentajes deben sumar 100% (suman ${(total * 100).toFixed(1)}%)`);
@@ -57,6 +66,7 @@ export async function updateRubric(sectionId: string, formData: FormData) {
       asistencia_advertencia_pct: asistenciaAdvertencia,
       asistencia_limite_pct: asistenciaLimite,
       asistencia_metodo: asistenciaMetodo,
+      tardanzas_por_ausencia: tardanzasPorAusencia,
     })
     .eq("section_id", sectionId);
   if (rubricError) throw new Error(rubricError.message);

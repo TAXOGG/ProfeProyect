@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { ausenciasConTardanzas } from "@/lib/attendance-grade";
 import type { SectionWithInstitution } from "@/lib/types";
 
 export type AttendanceAlert = {
@@ -23,7 +24,7 @@ export async function getAttendanceAlerts(
   for (const section of sections) {
     const { data: rubric } = await supabase
       .from("rubric_config")
-      .select("asistencia_advertencia_pct, asistencia_limite_pct")
+      .select("asistencia_advertencia_pct, asistencia_limite_pct, tardanzas_por_ausencia")
       .eq("section_id", section.id)
       .single();
 
@@ -58,16 +59,23 @@ export async function getAttendanceAlerts(
 
     const { data: records } = await supabase
       .from("attendance_records")
-      .select("session_id, student_id, ausencias, justificada")
+      .select("session_id, student_id, ausencias, justificada, tardia")
       .in(
         "session_id",
         sessions.map((s) => s.id),
       );
 
     for (const student of students) {
-      const ausenciasEfectivas = (records ?? [])
-        .filter((r) => r.student_id === student.id && !r.justificada)
+      const studentRecords = (records ?? []).filter((r) => r.student_id === student.id);
+      const ausenciasInjustificadas = studentRecords
+        .filter((r) => !r.justificada)
         .reduce((sum, r) => sum + r.ausencias, 0);
+      const cantidadTardanzas = studentRecords.filter((r) => r.tardia).length;
+      const ausenciasEfectivas = ausenciasConTardanzas(
+        ausenciasInjustificadas,
+        cantidadTardanzas,
+        rubric.tardanzas_por_ausencia,
+      );
       const ausenciasPct = (ausenciasEfectivas / totalLecciones) * 100;
 
       const limitePct = rubric.asistencia_limite_pct;
