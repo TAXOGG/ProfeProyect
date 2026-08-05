@@ -96,8 +96,8 @@ export function AjustesForm({
 
         <div className="mt-4 border-t border-zinc-100 pt-4">
           <label className="flex items-center text-xs font-medium text-zinc-600">
-            Umbrales de ausencias en la grilla de Asistencia
-            <HelpTooltip text="Colorean automáticamente a cada estudiante en la pantalla de Asistencia según su % de ausencias acumuladas: blanco si va bien, amarillo si se acerca al límite, rojo si ya lo superó. Déjalos vacíos para desactivar el código de color." />
+            Umbrales de ausencias y alerta temprana
+            <HelpTooltip text="Colorean automáticamente a cada estudiante en la pantalla de Asistencia según su % de ausencias acumuladas: blanco si va bien, amarillo si se acerca al límite, rojo si ya lo superó. Además, si configurás el umbral amarillo, los estudiantes que lo crucen aparecen como Alerta Temprana en tu Inicio. Déjalos vacíos para desactivar el código de color y las alertas." />
           </label>
           <div className="mt-2 grid grid-cols-2 gap-3">
             <div>
