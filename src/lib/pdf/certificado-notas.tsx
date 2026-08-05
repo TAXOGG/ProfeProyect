@@ -69,6 +69,15 @@ const styles = StyleSheet.create({
     color: ZINC_LIGHT,
     marginTop: 3,
   },
+  introText: {
+    fontSize: 9.5,
+    lineHeight: 1.4,
+    color: ZINC,
+    marginBottom: 14,
+    paddingLeft: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: TEAL,
+  },
   table: {
     marginTop: 4,
   },
@@ -158,6 +167,7 @@ export function CertificadoNotasDocument({
   logo,
   institution,
   docenteName,
+  introText,
 }: {
   section: Section;
   student: Student;
@@ -166,6 +176,7 @@ export function CertificadoNotasDocument({
   logo?: Buffer;
   institution?: InstitutionBranding;
   docenteName?: string | null;
+  introText?: string;
 }) {
   const ahora = new Date();
   const fechaEmision = ahora.toLocaleDateString("es-CR", {
@@ -208,6 +219,8 @@ export function CertificadoNotasDocument({
             {section.ciclo_escolar}
           </Text>
         </View>
+
+        {introText && <Text style={styles.introText}>{introText}</Text>}
 
         <View style={styles.table}>
           <View style={styles.tableHeaderRow}>
@@ -274,6 +287,7 @@ export async function renderCertificadoNotasPdf(props: {
   student: Student;
   periods: Period[];
   grades: StudentGrades;
+  introText?: string;
 }): Promise<Buffer> {
   const [logo, institution, docenteName] = await Promise.all([
     loadArceLogoBuffer(),

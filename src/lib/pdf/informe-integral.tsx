@@ -43,6 +43,15 @@ const styles = StyleSheet.create({
   },
   studentName: { fontSize: 13, fontFamily: "Helvetica-Bold" },
   studentMeta: { fontSize: 9, color: ZINC_LIGHT, marginTop: 3 },
+  introText: {
+    fontSize: 9.5,
+    lineHeight: 1.4,
+    color: ZINC,
+    marginBottom: 14,
+    paddingLeft: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: TEAL,
+  },
   sectionTitle: {
     fontSize: 10,
     fontFamily: "Helvetica-Bold",
@@ -153,6 +162,7 @@ export function InformeIntegralDocument({
   logo,
   institution,
   docenteName,
+  introText,
 }: {
   section: Section;
   student: Student;
@@ -164,6 +174,7 @@ export function InformeIntegralDocument({
   logo?: Buffer;
   institution?: InstitutionBranding;
   docenteName?: string | null;
+  introText?: string;
 }) {
   const ahora = new Date();
   const fechaEmision = ahora.toLocaleDateString("es-CR", {
@@ -206,6 +217,8 @@ export function InformeIntegralDocument({
             {section.ciclo_escolar}
           </Text>
         </View>
+
+        {introText && <Text style={styles.introText}>{introText}</Text>}
 
         <Text style={styles.sectionTitle}>Calificaciones</Text>
         <View style={styles.table}>
@@ -325,6 +338,7 @@ export async function renderInformeIntegralPdf(props: {
   apoyos: InformeApoyoRow[];
   instrumentos: InformeInstrumentoRow[];
   observaciones: InformeObservacionRow[];
+  introText?: string;
 }): Promise<Buffer> {
   const [logo, institution, docenteName] = await Promise.all([
     loadArceLogoBuffer(),

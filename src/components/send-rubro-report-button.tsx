@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { sendRubroReporte, type RubroModulo } from "@/lib/actions/rubro-reporte";
+import { PdfIntroModal } from "@/components/pdf-intro-modal";
 
 export function SendRubroReportButton({
   sectionId,
@@ -17,6 +18,7 @@ export function SendRubroReportButton({
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<"idle" | "sent" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   if (!hasEmail) {
     return (
@@ -34,29 +36,32 @@ export function SendRubroReportButton({
     );
   }
 
+  function send(introText: string) {
+    setStatus("idle");
+    setErrorMsg(null);
+    startTransition(async () => {
+      try {
+        const result = await sendRubroReporte(sectionId, studentId, modulo, introText || undefined);
+        if (result.success) {
+          setStatus("sent");
+          setModalOpen(false);
+        } else {
+          setStatus("error");
+          setErrorMsg(result.error ?? "No se pudo enviar.");
+        }
+      } catch (err) {
+        setStatus("error");
+        setErrorMsg(err instanceof Error ? err.message : "No se pudo enviar.");
+      }
+    });
+  }
+
   return (
     <div className="flex flex-col items-center gap-1">
       <button
         type="button"
         disabled={isPending}
-        onClick={() => {
-          setStatus("idle");
-          setErrorMsg(null);
-          startTransition(async () => {
-            try {
-              const result = await sendRubroReporte(sectionId, studentId, modulo);
-              if (result.success) {
-                setStatus("sent");
-              } else {
-                setStatus("error");
-                setErrorMsg(result.error ?? "No se pudo enviar.");
-              }
-            } catch (err) {
-              setStatus("error");
-              setErrorMsg(err instanceof Error ? err.message : "No se pudo enviar.");
-            }
-          });
-        }}
+        onClick={() => setModalOpen(true)}
         className="rounded border border-teal-200 bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100 disabled:opacity-50"
       >
         {isPending ? "Enviando..." : status === "error" ? "Reintentar" : "Enviar reporte"}
@@ -65,6 +70,14 @@ export function SendRubroReportButton({
         <span className="max-w-[11rem] rounded border border-red-200 bg-red-50 px-1.5 py-1 text-xs font-medium leading-tight text-red-700">
           No se pudo enviar: {errorMsg}
         </span>
+      )}
+      {modalOpen && (
+        <PdfIntroModal
+          title="Enviar reporte"
+          isPending={isPending}
+          onConfirm={send}
+          onCancel={() => setModalOpen(false)}
+        />
       )}
     </div>
   );

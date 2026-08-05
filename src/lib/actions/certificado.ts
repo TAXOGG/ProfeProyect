@@ -6,8 +6,12 @@ import { sendEmail, LOGO_URL } from "@/lib/email";
 
 export type SendCertificateResult = { success?: boolean; error?: string };
 
-function certificadoEmailHtml(input: { studentFullName: string; sectionLabel: string }) {
-  const { studentFullName, sectionLabel } = input;
+function certificadoEmailHtml(input: {
+  studentFullName: string;
+  sectionLabel: string;
+  introText?: string;
+}) {
+  const { studentFullName, sectionLabel, introText } = input;
   return `
 <div style="font-family: Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #3f3f46;">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
@@ -20,6 +24,13 @@ function certificadoEmailHtml(input: { studentFullName: string; sectionLabel: st
   </tr></table>
   <div style="border-bottom: 3px solid #0f766e; margin: 8px 0 16px;"></div>
   <p style="font-size: 14px; line-height: 1.5;">Estimado padre, madre o representante,</p>
+  ${
+    introText
+      ? `<div style="background:#f0fdfa; border-left:3px solid #0f766e; border-radius:4px; padding:10px 12px; margin: 12px 0;">
+           <p style="font-size:13px; line-height:1.4; margin:0;">${introText}</p>
+         </div>`
+      : ""
+  }
   <p style="font-size: 14px; line-height: 1.5;">
     Adjunto encontrará el certificado de calificaciones de <strong>${studentFullName}</strong>
     correspondiente a <strong>${sectionLabel}</strong>.
@@ -38,6 +49,7 @@ function certificadoEmailHtml(input: { studentFullName: string; sectionLabel: st
 export async function sendCertificadoNotas(
   sectionId: string,
   studentId: string,
+  introText?: string,
 ): Promise<SendCertificateResult> {
   const data = await fetchSectionGradesData(sectionId, studentId);
   if (!data) return { error: "No se encontró la sección." };
@@ -63,12 +75,13 @@ export async function sendCertificadoNotas(
       student,
       periods,
       grades: studentGrades,
+      introText,
     });
 
     await sendEmail({
       to: student.contacto_correo,
       subject: `Certificado de calificaciones — ${studentFullName}`,
-      html: certificadoEmailHtml({ studentFullName, sectionLabel }),
+      html: certificadoEmailHtml({ studentFullName, sectionLabel, introText }),
       attachments: [
         {
           filename: `certificado-${studentFullName.replace(/\s+/g, "-").toLowerCase()}.pdf`,

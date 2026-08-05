@@ -63,6 +63,14 @@ const styles = StyleSheet.create({
     color: ZINC_LIGHT,
     marginTop: 3,
   },
+  introText: {
+    fontSize: 9.5,
+    lineHeight: 1.4,
+    color: ZINC,
+    marginBottom: 14,
+    paddingLeft: 8,
+    borderLeftWidth: 2,
+  },
   periodTitle: {
     fontSize: 11,
     fontFamily: "Helvetica-Bold",
@@ -176,6 +184,7 @@ export function RubroDetalleDocument({
   logo,
   institution,
   docenteName,
+  introText,
 }: {
   section: Section;
   student: Student;
@@ -187,6 +196,7 @@ export function RubroDetalleDocument({
   logo?: Buffer;
   institution?: InstitutionBranding;
   docenteName?: string | null;
+  introText?: string;
 }) {
   const ahora = new Date();
   const fechaEmision = ahora.toLocaleDateString("es-CR", {
@@ -229,6 +239,10 @@ export function RubroDetalleDocument({
             {section.ciclo_escolar}
           </Text>
         </View>
+
+        {introText && (
+          <Text style={[styles.introText, { borderLeftColor: accentColor }]}>{introText}</Text>
+        )}
 
         {periods.map((p) => (
           <View key={p.id} wrap={false}>
@@ -294,6 +308,7 @@ export async function renderRubroDetallePdf(props: {
   accentColorLight: string;
   periods: RubroDetallePeriod[];
   noteText?: string;
+  introText?: string;
 }): Promise<Buffer> {
   const [logo, institution, docenteName] = await Promise.all([
     loadArceLogoBuffer(),

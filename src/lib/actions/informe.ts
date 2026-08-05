@@ -260,8 +260,12 @@ export async function buildInformeIntegralBatch(
 
 export type SendInformeResult = { success?: boolean; error?: string };
 
-function informeEmailHtml(input: { studentFullName: string; sectionLabel: string }) {
-  const { studentFullName, sectionLabel } = input;
+function informeEmailHtml(input: {
+  studentFullName: string;
+  sectionLabel: string;
+  introText?: string;
+}) {
+  const { studentFullName, sectionLabel, introText } = input;
   return `
 <div style="font-family: Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #3f3f46;">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
@@ -274,6 +278,13 @@ function informeEmailHtml(input: { studentFullName: string; sectionLabel: string
   </tr></table>
   <div style="border-bottom: 3px solid #0f766e; margin: 8px 0 16px;"></div>
   <p style="font-size: 14px; line-height: 1.5;">Estimado padre, madre o representante,</p>
+  ${
+    introText
+      ? `<div style="background:#f0fdfa; border-left:3px solid #0f766e; border-radius:4px; padding:10px 12px; margin: 12px 0;">
+           <p style="font-size:13px; line-height:1.4; margin:0;">${introText}</p>
+         </div>`
+      : ""
+  }
   <p style="font-size: 14px; line-height: 1.5;">
     Adjunto encontrará el informe integral de <strong>${studentFullName}</strong>
     correspondiente a <strong>${sectionLabel}</strong>, con calificaciones, apoyos educativos y
@@ -289,6 +300,7 @@ function informeEmailHtml(input: { studentFullName: string; sectionLabel: string
 export async function sendInformeIntegral(
   sectionId: string,
   studentId: string,
+  introText?: string,
 ): Promise<SendInformeResult> {
   const data = await buildInformeIntegralData(sectionId, studentId);
   if (!data) return { error: "No se encontró al estudiante." };
@@ -304,12 +316,12 @@ export async function sendInformeIntegral(
   const sectionLabel = `${section.asignatura} — ${section.nombre}`;
 
   try {
-    const pdfBuffer = await renderInformeIntegralPdf(data);
+    const pdfBuffer = await renderInformeIntegralPdf({ ...data, introText });
 
     await sendEmail({
       to: student.contacto_correo,
       subject: `Informe integral — ${studentFullName}`,
-      html: informeEmailHtml({ studentFullName, sectionLabel }),
+      html: informeEmailHtml({ studentFullName, sectionLabel, introText }),
       attachments: [
         {
           filename: `informe-${studentFullName.replace(/\s+/g, "-").toLowerCase()}.pdf`,

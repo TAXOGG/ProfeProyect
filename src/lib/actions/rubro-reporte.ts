@@ -21,8 +21,9 @@ function reporteEmailHtml(input: {
   sectionLabel: string;
   moduleLabel: string;
   noteText?: string;
+  introText?: string;
 }) {
-  const { studentFullName, sectionLabel, moduleLabel, noteText } = input;
+  const { studentFullName, sectionLabel, moduleLabel, noteText, introText } = input;
   return `
 <div style="font-family: Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #3f3f46;">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
@@ -35,6 +36,13 @@ function reporteEmailHtml(input: {
   </tr></table>
   <div style="border-bottom: 3px solid #0f766e; margin: 8px 0 16px;"></div>
   <p style="font-size: 14px; line-height: 1.5;">Estimado padre, madre o representante,</p>
+  ${
+    introText
+      ? `<div style="background:#f0fdfa; border-left:3px solid #0f766e; border-radius:4px; padding:10px 12px; margin: 12px 0;">
+           <p style="font-size:13px; line-height:1.4; margin:0;">${introText}</p>
+         </div>`
+      : ""
+  }
   <p style="font-size: 14px; line-height: 1.5;">
     Adjunto encontrará el reporte de <strong>${moduleLabel}</strong> de
     <strong>${studentFullName}</strong> correspondiente a <strong>${sectionLabel}</strong>.
@@ -62,6 +70,7 @@ export async function sendRubroReporte(
   sectionId: string,
   studentId: string,
   modulo: RubroModulo,
+  introText?: string,
 ): Promise<SendRubroReportResult> {
   const meta = MODULE_META[modulo];
   if (!meta) return { error: "Módulo inválido." };
@@ -232,12 +241,19 @@ export async function sendRubroReporte(
       accentColorLight: meta.accentLight,
       periods: periodRows,
       noteText,
+      introText,
     });
 
     await sendEmail({
       to: student.contacto_correo,
       subject: `Reporte de ${meta.label} — ${studentFullName}`,
-      html: reporteEmailHtml({ studentFullName, sectionLabel, moduleLabel: meta.label, noteText }),
+      html: reporteEmailHtml({
+        studentFullName,
+        sectionLabel,
+        moduleLabel: meta.label,
+        noteText,
+        introText,
+      }),
       attachments: [
         {
           filename: `${modulo}-${studentFullName.replace(/\s+/g, "-").toLowerCase()}.pdf`,
