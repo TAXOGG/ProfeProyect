@@ -10,7 +10,7 @@ import { db } from "@/lib/offline/db";
 import { enqueueAction, pullCotidianoData } from "@/lib/offline/sync-engine";
 import { moduleColor } from "@/lib/module-colors";
 import { SendRubroReportButton } from "@/components/send-rubro-report-button";
-import { fechasAusenteInjustificado } from "@/lib/attendance-grade";
+import { fechasAusenteInjustificado, fechaAplicaPorIngreso } from "@/lib/attendance-grade";
 import type { CotidianoIndicator, CotidianoScore, Student } from "@/lib/types";
 
 export function CotidianoGrid({
@@ -162,9 +162,9 @@ export function CotidianoGrid({
               attendanceRecords,
               s.id,
             );
-            const indicadoresValidos = indicators.filter(
-              (i) => !i.fecha_aplicacion || !fechasAusente.has(i.fecha_aplicacion),
-            );
+            const indicadoresValidos = indicators
+              .filter((i) => !i.fecha_aplicacion || !fechasAusente.has(i.fecha_aplicacion))
+              .filter((i) => fechaAplicaPorIngreso(i.fecha_aplicacion, s));
             const puntosPosiblesFila = indicadoresValidos.reduce(
               (sum, i) => sum + i.puntos_max,
               0,
@@ -181,8 +181,10 @@ export function CotidianoGrid({
                   {s.primer_apellido} {s.segundo_apellido} {s.nombre}
                 </td>
                 {indicators.map((i) => {
-                  const excluido =
+                  const excluidoPorAusencia =
                     !!i.fecha_aplicacion && fechasAusente.has(i.fecha_aplicacion);
+                  const excluidoPorIngreso = !fechaAplicaPorIngreso(i.fecha_aplicacion, s);
+                  const excluido = excluidoPorAusencia || excluidoPorIngreso;
                   const isSuspect =
                     pending?.itemId === i.id && pending.studentId === s.id;
                   const justSaved = isSaved(i.id, s.id);
@@ -191,7 +193,11 @@ export function CotidianoGrid({
                       <td key={i.id} className="px-2 py-1.5 text-center">
                         <span
                           className="text-xs font-medium text-zinc-400"
-                          title="No aplica: el estudiante estuvo ausente sin justificar ese día"
+                          title={
+                            excluidoPorIngreso
+                              ? "No aplica: es anterior a la fecha de ingreso del estudiante"
+                              : "No aplica: el estudiante estuvo ausente sin justificar ese día"
+                          }
                         >
                           N/A
                         </span>

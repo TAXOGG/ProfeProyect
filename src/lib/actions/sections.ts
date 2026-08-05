@@ -159,7 +159,11 @@ async function cloneStructure(
 
   const { data: sourceRubric } = await supabase
     .from("rubric_config")
-    .select("cotidiano_pct, tareas_pct, asistencia_pct, proyecto_pct, pruebas_pct, tolerancia_pct")
+    .select(
+      "cotidiano_pct, tareas_pct, asistencia_pct, proyecto_pct, pruebas_pct, tolerancia_pct, " +
+        "asistencia_metodo, asistencia_nota, asistencia_advertencia_pct, asistencia_limite_pct, " +
+        "tardanzas_por_ausencia",
+    )
     .eq("section_id", sourceSectionId)
     .maybeSingle();
   if (sourceRubric) {

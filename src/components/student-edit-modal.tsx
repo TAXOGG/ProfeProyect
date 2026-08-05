@@ -138,6 +138,38 @@ export function StudentEditModal({
             />
           </div>
 
+          <div className="sm:col-span-2 border-t border-zinc-100 pt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+              Ingreso por traslado (opcional)
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">Fecha de ingreso</label>
+            <input
+              name="fecha_ingreso"
+              type="date"
+              defaultValue={student.fecha_ingreso ?? ""}
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">
+              Evaluaciones a considerar
+            </label>
+            <select
+              name="evaluaciones_desde_ingreso"
+              defaultValue={student.evaluaciones_desde_ingreso ? "true" : "false"}
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="false">Usar todas las evaluaciones</option>
+              <option value="true">Usar solo desde la fecha de ingreso</option>
+            </select>
+            <p className="mt-1 text-xs text-zinc-400">
+              Con &quot;desde la fecha de ingreso&quot;, el estudiante no carga con Cotidiano ni
+              Asistencia de fechas anteriores a que llegara. Aplica solo si completás la fecha.
+            </p>
+          </div>
+
           {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
 
           <div className="mt-1 flex justify-end gap-2 sm:col-span-2">

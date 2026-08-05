@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { ausenciasConTardanzas } from "@/lib/attendance-grade";
+import { ausenciasConTardanzas, fechaAplicaPorIngreso } from "@/lib/attendance-grade";
 import type { SectionWithInstitution } from "@/lib/types";
 
 export type AttendanceAlert = {
@@ -42,20 +42,17 @@ export async function getAttendanceAlerts(
     const [{ data: students }, { data: sessions }] = await Promise.all([
       supabase
         .from("students")
-        .select("id, primer_apellido, segundo_apellido, nombre")
+        .select("id, primer_apellido, segundo_apellido, nombre, fecha_ingreso, evaluaciones_desde_ingreso")
         .eq("section_id", section.id)
         .eq("estado", "activo")
         .is("deleted_at", null),
       supabase
         .from("attendance_sessions")
-        .select("id, lecciones_impartidas")
+        .select("id, fecha, lecciones_impartidas")
         .in("period_id", periodIds),
     ]);
 
     if (!students?.length || !sessions?.length) continue;
-
-    const totalLecciones = sessions.reduce((sum, s) => sum + s.lecciones_impartidas, 0);
-    if (totalLecciones === 0) continue;
 
     const { data: records } = await supabase
       .from("attendance_records")
@@ -66,7 +63,17 @@ export async function getAttendanceAlerts(
       );
 
     for (const student of students) {
-      const studentRecords = (records ?? []).filter((r) => r.student_id === student.id);
+      const sessionsAplicables = sessions.filter((s) => fechaAplicaPorIngreso(s.fecha, student));
+      const totalLecciones = sessionsAplicables.reduce(
+        (sum, s) => sum + s.lecciones_impartidas,
+        0,
+      );
+      if (totalLecciones === 0) continue;
+
+      const sessionIdsAplicables = new Set(sessionsAplicables.map((s) => s.id));
+      const studentRecords = (records ?? []).filter(
+        (r) => r.student_id === student.id && sessionIdsAplicables.has(r.session_id),
+      );
       const ausenciasInjustificadas = studentRecords
         .filter((r) => !r.justificada)
         .reduce((sum, r) => sum + r.ausencias, 0);

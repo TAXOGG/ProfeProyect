@@ -38,6 +38,18 @@ export function ausenciasConTardanzas(
   return ausenciasBase + Math.floor(cantidadTardanzas / tardanzasPorAusencia);
 }
 
+// Traslado: si el estudiante llegó a mitad de año y el docente eligió "usar solo
+// evaluaciones desde la fecha de ingreso", una fecha (de un indicador de Cotidiano o de
+// una sesión de Asistencia) anterior a su ingreso no debe contarle en contra.
+// Sin fecha propia (ítem sin fecha, o sin fecha_ingreso configurada) siempre aplica.
+export function fechaAplicaPorIngreso(
+  fecha: string | null,
+  student: { fecha_ingreso: string | null; evaluaciones_desde_ingreso: boolean },
+): boolean {
+  if (!student.evaluaciones_desde_ingreso || !student.fecha_ingreso || !fecha) return true;
+  return fecha >= student.fecha_ingreso;
+}
+
 // Fechas en las que un estudiante tuvo una ausencia injustificada — los indicadores de
 // Cotidiano aplicados esos días quedan excluidos del cálculo (ni suman en contra ni al
 // total posible), en vez de contarse como 0. Usado tanto en el cálculo de notas

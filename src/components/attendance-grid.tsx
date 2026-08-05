@@ -12,6 +12,7 @@ import { SendRubroReportButton } from "@/components/send-rubro-report-button";
 import {
   calcularNotaAsistencia,
   ausenciasConTardanzas,
+  fechaAplicaPorIngreso,
   type AsistenciaMetodo,
 } from "@/lib/attendance-grade";
 import type { AttendanceRecord, AttendanceSession, Student } from "@/lib/types";
@@ -117,8 +118,6 @@ export function AttendanceGrid({
   function scrollByAmount(amount: number) {
     scrollRef.current?.scrollBy({ left: amount, behavior: "smooth" });
   }
-
-  const totalLecciones = sessions.reduce((sum, s) => sum + s.lecciones_impartidas, 0);
 
   function key(sessionId: string, studentId: string) {
     return `${sessionId}:${studentId}`;
@@ -305,12 +304,19 @@ export function AttendanceGrid({
           </thead>
           <tbody className="divide-y divide-zinc-100">
             {students.map((s) => {
-              const ausenciasInjustificadas = sessions.reduce((sum, session) => {
+              const sessionsAplicables = sessions.filter((session) =>
+                fechaAplicaPorIngreso(session.fecha, s),
+              );
+              const totalLeccionesAplicables = sessionsAplicables.reduce(
+                (sum, session) => sum + session.lecciones_impartidas,
+                0,
+              );
+              const ausenciasInjustificadas = sessionsAplicables.reduce((sum, session) => {
                 const raw = getValue(session.id, s.id);
                 const parsed = parseAttendanceInput(raw);
                 return sum + (parsed.justificada ? 0 : parsed.ausencias);
               }, 0);
-              const cantidadTardanzas = sessions.reduce((sum, session) => {
+              const cantidadTardanzas = sessionsAplicables.reduce((sum, session) => {
                 const raw = getValue(session.id, s.id);
                 return parseAttendanceInput(raw).tardia ? sum + 1 : sum;
               }, 0);
@@ -320,7 +326,9 @@ export function AttendanceGrid({
                 tardanzasPorAusencia,
               );
               const ausenciasPct =
-                totalLecciones > 0 ? (ausenciasEfectivas / totalLecciones) * 100 : 0;
+                totalLeccionesAplicables > 0
+                  ? (ausenciasEfectivas / totalLeccionesAplicables) * 100
+                  : 0;
               const nota = calcularNotaAsistencia(ausenciasPct, asistenciaMetodo);
               const aporte = nota * asistenciaPct;
               const alertStatus: "rojo" | "amarillo" | "normal" =

@@ -391,6 +391,8 @@ export async function updateStudent(sectionId: string, studentId: string, formDa
       sexo: String(formData.get("sexo") ?? "").trim() || null,
       tipo_apoyo: String(formData.get("tipo_apoyo") ?? "No tiene").trim(),
       adecuacion: String(formData.get("adecuacion") ?? "no_presenta").trim(),
+      fecha_ingreso: String(formData.get("fecha_ingreso") ?? "").trim() || null,
+      evaluaciones_desde_ingreso: formData.get("evaluaciones_desde_ingreso") === "true",
     })
     .eq("id", studentId);
 

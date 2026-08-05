@@ -205,6 +205,8 @@ export type Student = {
   tipo_apoyo: string | null;
   adecuacion: "no_presenta" | "acceso" | "curricular_significativa" | "curricular_no_significativa";
   estado: "activo" | "trasladado" | "salido";
+  fecha_ingreso: string | null;
+  evaluaciones_desde_ingreso: boolean;
   correo_mep: string | null;
   correo_alternativo: string | null;
   telefono1: string | null;

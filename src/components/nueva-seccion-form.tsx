@@ -134,8 +134,9 @@ export function NuevaSeccionForm({
             ))}
           </select>
           <p className="mt-1 text-xs text-zinc-400">
-            Copia la distribución de rubros, indicadores, pruebas, tareas y etapas de proyecto de
-            esa sección. No copia estudiantes, notas ni fechas de asistencia.
+            Copia la distribución de rubros, umbrales de asistencia y alerta temprana,
+            indicadores, pruebas, tareas y etapas de proyecto de esa sección. No copia
+            estudiantes, notas ni fechas de asistencia.
           </p>
         </div>
       )}
