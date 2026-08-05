@@ -49,3 +49,19 @@ export async function getInstitutionBranding(
     return null;
   }
 }
+
+// El nombre del docente es decorativo en el PDF (metadato informativo) — si falla,
+// el documento igual se genera, solo sin esa línea.
+export async function getDocenteName(teacherId: string): Promise<string | null> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", teacherId)
+      .single();
+    return data?.full_name ?? null;
+  } catch {
+    return null;
+  }
+}

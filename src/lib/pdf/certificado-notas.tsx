@@ -1,7 +1,12 @@
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
 import type { Period, Section, Student } from "@/lib/types";
 import type { StudentGrades } from "@/lib/grades";
-import { loadArceLogoBuffer, getInstitutionBranding, type InstitutionBranding } from "@/lib/pdf/branding";
+import {
+  loadArceLogoBuffer,
+  getInstitutionBranding,
+  getDocenteName,
+  type InstitutionBranding,
+} from "@/lib/pdf/branding";
 
 const TEAL = "#0f766e";
 const TEAL_LIGHT = "#f0fdfa";
@@ -152,6 +157,7 @@ export function CertificadoNotasDocument({
   grades,
   logo,
   institution,
+  docenteName,
 }: {
   section: Section;
   student: Student;
@@ -159,11 +165,17 @@ export function CertificadoNotasDocument({
   grades: StudentGrades;
   logo?: Buffer;
   institution?: InstitutionBranding;
+  docenteName?: string | null;
 }) {
-  const fechaEmision = new Date().toLocaleDateString("es-CR", {
+  const ahora = new Date();
+  const fechaEmision = ahora.toLocaleDateString("es-CR", {
     year: "numeric",
     month: "long",
     day: "numeric",
+  });
+  const horaEmision = ahora.toLocaleTimeString("es-CR", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 
   return (
@@ -179,7 +191,10 @@ export function CertificadoNotasDocument({
           </View>
           <View>
             <Text style={styles.docTitle}>Certificado de Calificaciones</Text>
-            <Text style={styles.docDate}>Emitido el {fechaEmision}</Text>
+            {docenteName && <Text style={styles.docDate}>Docente: {docenteName}</Text>}
+            <Text style={styles.docDate}>
+              Emitido el {fechaEmision}, {horaEmision}
+            </Text>
           </View>
         </View>
 
@@ -260,11 +275,17 @@ export async function renderCertificadoNotasPdf(props: {
   periods: Period[];
   grades: StudentGrades;
 }): Promise<Buffer> {
-  const [logo, institution] = await Promise.all([
+  const [logo, institution, docenteName] = await Promise.all([
     loadArceLogoBuffer(),
     getInstitutionBranding(props.section.institution_id),
+    getDocenteName(props.section.teacher_id),
   ]);
   return renderToBuffer(
-    <CertificadoNotasDocument {...props} logo={logo} institution={institution ?? undefined} />,
+    <CertificadoNotasDocument
+      {...props}
+      logo={logo}
+      institution={institution ?? undefined}
+      docenteName={docenteName}
+    />,
   );
 }

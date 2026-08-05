@@ -70,6 +70,35 @@ export default async function EstudiantesPage({
 
       <StudentImportForm sectionId={sectionId} />
 
+      {activos > 0 && (
+        <div className="max-w-lg rounded-lg border border-zinc-200 bg-white p-5">
+          <h3 className="text-sm font-semibold text-zinc-900">Lista para firma</h3>
+          <p className="mt-1 text-xs text-zinc-500">
+            Genera una hoja imprimible con los estudiantes activos ({activos}) y una columna en
+            blanco para firma. Útil para reuniones, entrega de boletas o control de asistencia
+            manual.
+          </p>
+          <form
+            action={`/secciones/${sectionId}/estudiantes/lista-firma`}
+            method="GET"
+            target="_blank"
+            className="mt-3 flex flex-col gap-3 sm:flex-row"
+          >
+            <input
+              name="motivo"
+              placeholder="Motivo (opcional): reunión de padres, entrega de boletas..."
+              className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+            <button
+              type="submit"
+              className="rounded-md bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+            >
+              Descargar PDF
+            </button>
+          </form>
+        </div>
+      )}
+
       <div className="max-w-lg rounded-lg border border-zinc-200 bg-white p-5">
         <h3 className="text-sm font-semibold text-zinc-900">Agregar estudiante</h3>
         <form action={createStudentForSection} className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
