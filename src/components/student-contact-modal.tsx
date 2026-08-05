@@ -55,7 +55,9 @@ export function StudentContactModal({
           action={(formData) => {
             setError(null);
             const correo = String(formData.get("contacto_correo") ?? "").trim();
-            if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+            const correo2 = String(formData.get("contacto2_correo") ?? "").trim();
+            const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if ((correo && !emailRe.test(correo)) || (correo2 && !emailRe.test(correo2))) {
               setError("El correo no parece válido.");
               return;
             }
@@ -96,6 +98,41 @@ export function StudentContactModal({
             <p className="mt-1 text-xs text-zinc-400">
               A este correo se enviará el certificado de notas cuando lo generes desde Reportes.
             </p>
+          </div>
+
+          <div className="mt-2 border-t border-zinc-200 pt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+              Segundo encargado (opcional)
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">
+              Nombre del segundo encargado
+            </label>
+            <input
+              name="contacto2_nombre"
+              defaultValue={student.contacto2_nombre ?? ""}
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">Parentesco</label>
+            <input
+              name="contacto2_parentesco"
+              placeholder="Madre, padre, tío..."
+              defaultValue={student.contacto2_parentesco ?? ""}
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">Correo del segundo encargado</label>
+            <input
+              type="email"
+              name="contacto2_correo"
+              placeholder="correo@ejemplo.com"
+              defaultValue={student.contacto2_correo ?? ""}
+              className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2 text-sm placeholder:text-zinc-400"
+            />
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}

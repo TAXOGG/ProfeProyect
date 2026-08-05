@@ -390,6 +390,7 @@ export async function updateStudent(sectionId: string, studentId: string, formDa
       identificacion: String(formData.get("identificacion") ?? "").trim() || null,
       sexo: String(formData.get("sexo") ?? "").trim() || null,
       tipo_apoyo: String(formData.get("tipo_apoyo") ?? "No tiene").trim(),
+      adecuacion: String(formData.get("adecuacion") ?? "no_presenta").trim(),
     })
     .eq("id", studentId);
 
@@ -427,6 +428,9 @@ export async function updateStudentContacto(
   const contactoNombre = String(formData.get("contacto_nombre") ?? "").trim();
   const contactoParentesco = String(formData.get("contacto_parentesco") ?? "").trim();
   const contactoCorreo = String(formData.get("contacto_correo") ?? "").trim();
+  const contacto2Nombre = String(formData.get("contacto2_nombre") ?? "").trim();
+  const contacto2Parentesco = String(formData.get("contacto2_parentesco") ?? "").trim();
+  const contacto2Correo = String(formData.get("contacto2_correo") ?? "").trim();
 
   const { error } = await supabase
     .from("students")
@@ -434,6 +438,9 @@ export async function updateStudentContacto(
       contacto_nombre: contactoNombre || null,
       contacto_parentesco: contactoParentesco || null,
       contacto_correo: contactoCorreo || null,
+      contacto2_nombre: contacto2Nombre || null,
+      contacto2_parentesco: contacto2Parentesco || null,
+      contacto2_correo: contacto2Correo || null,
     })
     .eq("id", studentId);
 

@@ -202,6 +202,7 @@ export type Student = {
   edad: number | null;
   sexo: string | null;
   tipo_apoyo: string | null;
+  adecuacion: "no_presenta" | "acceso" | "curricular_significativa" | "curricular_no_significativa";
   estado: "activo" | "trasladado" | "salido";
   correo_mep: string | null;
   correo_alternativo: string | null;
@@ -210,6 +211,9 @@ export type Student = {
   contacto_nombre: string | null;
   contacto_parentesco: string | null;
   contacto_correo: string | null;
+  contacto2_nombre: string | null;
+  contacto2_parentesco: string | null;
+  contacto2_correo: string | null;
   deleted_at: string | null;
 };
 

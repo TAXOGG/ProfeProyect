@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { updateStudent } from "@/lib/actions/students";
 import type { Student } from "@/lib/types";
+import { ADECUACION_OPCIONES } from "@/lib/adecuacion";
 
 export function StudentEditModal({
   sectionId,
@@ -112,8 +113,24 @@ export function StudentEditModal({
               <option value="M">Mujer</option>
             </select>
           </div>
-          <div className="sm:col-span-2">
-            <label className="block text-xs font-medium text-zinc-700">Tipo de apoyo</label>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">Tipo de Adecuación</label>
+            <select
+              name="adecuacion"
+              defaultValue={student.adecuacion}
+              className="mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm"
+            >
+              {ADECUACION_OPCIONES.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-700">
+              Tipo de apoyo (detalle libre)
+            </label>
             <input
               name="tipo_apoyo"
               defaultValue={student.tipo_apoyo ?? "No tiene"}

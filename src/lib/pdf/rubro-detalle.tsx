@@ -1,6 +1,6 @@
 import { Document, Page, Text, View, Image, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
-import { LOGO_URL } from "@/lib/email";
 import type { Section, Student } from "@/lib/types";
+import { loadArceLogoBuffer, getInstitutionBranding, type InstitutionBranding } from "@/lib/pdf/branding";
 
 const ZINC = "#3f3f46";
 const ZINC_LIGHT = "#71717a";
@@ -32,11 +32,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: "Helvetica-Bold",
     color: "#0f766e",
-  },
-  brandSub: {
-    fontSize: 8,
-    color: ZINC_LIGHT,
-    marginTop: 2,
   },
   docTitle: {
     fontSize: 11,
@@ -141,8 +136,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#e4e4e7",
     paddingTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  footerLogo: {
+    width: 12,
+    height: 12,
+    marginRight: 6,
+  },
+  footerText: {
     fontSize: 7.5,
     color: ZINC_LIGHT,
+    flex: 1,
   },
 });
 
@@ -164,6 +169,7 @@ export function RubroDetalleDocument({
   periods,
   noteText,
   logo,
+  institution,
 }: {
   section: Section;
   student: Student;
@@ -173,6 +179,7 @@ export function RubroDetalleDocument({
   periods: RubroDetallePeriod[];
   noteText?: string;
   logo?: Buffer;
+  institution?: InstitutionBranding;
 }) {
   const fechaEmision = new Date().toLocaleDateString("es-CR", {
     year: "numeric",
@@ -188,13 +195,8 @@ export function RubroDetalleDocument({
       <Page size="LETTER" style={styles.page}>
         <View style={[styles.header, { borderBottomWidth: 2, borderBottomColor: accentColor }]}>
           <View style={styles.brandRow}>
-            {logo && <Image src={logo} style={styles.logo} />}
-            <View>
-              <Text style={styles.brand}>ARCE</Text>
-              <Text style={styles.brandSub}>
-                Agilización de Registros para la Calificación del Educador
-              </Text>
-            </View>
+            {institution?.logo && <Image src={institution.logo} style={styles.logo} />}
+            <Text style={styles.brand}>{institution?.nombre ?? "ARCE"}</Text>
           </View>
           <View>
             <Text style={styles.docTitle}>Reporte de {moduleLabel}</Text>
@@ -257,29 +259,16 @@ export function RubroDetalleDocument({
         )}
 
         <View style={styles.footer}>
-          <Text>
-            Documento generado automáticamente por ARCE a partir del registro de {moduleLabel}
-            {" "}del docente. No requiere firma para uso informativo del padre, madre o
-            representante.
+          {logo && <Image src={logo} style={styles.footerLogo} />}
+          <Text style={styles.footerText}>
+            Documento generado automáticamente por ARCE, a partir de la información de{" "}
+            {moduleLabel} que el docente ha registrado en la plataforma. No requiere firma para
+            uso informativo del padre, madre o representante.
           </Text>
         </View>
       </Page>
     </Document>
   );
-}
-
-let logoBufferCache: Buffer | null = null;
-
-async function loadLogoBuffer(): Promise<Buffer | undefined> {
-  if (logoBufferCache) return logoBufferCache;
-  try {
-    const res = await fetch(LOGO_URL);
-    if (!res.ok) return undefined;
-    logoBufferCache = Buffer.from(await res.arrayBuffer());
-    return logoBufferCache;
-  } catch {
-    return undefined;
-  }
 }
 
 export async function renderRubroDetallePdf(props: {
@@ -291,6 +280,11 @@ export async function renderRubroDetallePdf(props: {
   periods: RubroDetallePeriod[];
   noteText?: string;
 }): Promise<Buffer> {
-  const logo = await loadLogoBuffer();
-  return renderToBuffer(<RubroDetalleDocument {...props} logo={logo} />);
+  const [logo, institution] = await Promise.all([
+    loadArceLogoBuffer(),
+    getInstitutionBranding(props.section.institution_id),
+  ]);
+  return renderToBuffer(
+    <RubroDetalleDocument {...props} logo={logo} institution={institution ?? undefined} />,
+  );
 }

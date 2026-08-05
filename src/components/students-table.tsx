@@ -7,6 +7,7 @@ import { StudentContactModal } from "@/components/student-contact-modal";
 import { StudentEditModal } from "@/components/student-edit-modal";
 import { reorderStudents } from "@/lib/actions/students";
 import type { Student } from "@/lib/types";
+import { adecuacionLabel, adecuacionBadgeClass } from "@/lib/adecuacion";
 
 const DIACRITICS_RE = new RegExp("[\\u0300-\\u036f]", "g");
 
@@ -71,6 +72,7 @@ export function StudentsTable({
               <th className="px-4 py-2">Identificación</th>
               <th className="px-4 py-2">Sexo</th>
               <th className="px-4 py-2">Tipo de apoyo</th>
+              <th className="px-4 py-2">Adecuación</th>
               <th className="px-4 py-2">Estado</th>
               <th className="px-4 py-2">Contacto</th>
               <th className="px-4 py-2">Evidencia</th>
@@ -96,6 +98,17 @@ export function StudentsTable({
                   {s.sexo === "H" ? "Hombre" : s.sexo === "M" ? "Mujer" : "—"}
                 </td>
                 <td className="px-4 py-2 text-zinc-500">{s.tipo_apoyo ?? "—"}</td>
+                <td className="px-4 py-2">
+                  {s.adecuacion === "no_presenta" ? (
+                    <span className="text-zinc-400">—</span>
+                  ) : (
+                    <span
+                      className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${adecuacionBadgeClass(s.adecuacion)}`}
+                    >
+                      {adecuacionLabel(s.adecuacion)}
+                    </span>
+                  )}
+                </td>
                 <td className="px-4 py-2">
                   <StudentRowActions sectionId={sectionId} studentId={s.id} estado={s.estado} />
                 </td>
